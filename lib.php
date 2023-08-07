@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use auth_disguise\manager\user as user_manager;
+
 /**
  * Add in form elements to course module configuration to allow for user
  * disguise modules to be configured. Set the form value(s) from their saved
@@ -233,6 +235,9 @@ function auth_disguise_after_require_login(
         return;
     }
 
+    // TODO: Temporarily put user disguise here
+    apply_user_disguise();
+
     global $DB;
     global $USER;
 
@@ -324,4 +329,87 @@ function auth_disguise_after_require_login(
 
     // TODO: What about checking course category level? Is this part of "site" or courseid = catid?
 
+}
+
+// TODO: Move this function to somewhere else, could be a separate class.
+function apply_user_disguise() {
+
+    global $USER, $PAGE, $DB;
+
+    // Check if user disguise is enabled.
+
+    // We will need to use Hook API to do this instead of callback.
+
+    // Check if user disguise is enabled
+
+    if (isloggedin() && !isguestuser() ) {
+        debugging('User is logged in, but not as a guest. Disguising user.', DEBUG_DEVELOPER);
+
+        // Context ID.
+        try {
+            // This will throw error if context is empty when AJAX_SCRIPT is true.
+            // $PAGE->context is a magic getter, and it is really annoying to do null check, as isset always return false.
+            $context = $PAGE->context;
+        } catch (Exception $e) {
+            debugging('Context is empty.', DEBUG_DEVELOPER);
+            return;
+        }
+
+        // Check context level to determine whether the disguise is needed.
+        switch ($context->contextlevel) {
+            case CONTEXT_SYSTEM:
+                $disguiseenabled = false;
+                break;
+            case CONTEXT_COURSE:
+                // Exclude site course.
+                if ($context->instanceid == SITEID) {
+                    $disguiseenabled = false;
+                } else {
+                    $disguiseenabled = true;
+                }
+
+                // Check if disguise is enabled for this course.
+
+                break;
+            case CONTEXT_MODULE:
+                // Check if disguise is enabled for this module.
+
+                $disguiseenabled = true;
+                break;
+            case CONTEXT_BLOCK:
+                $disguiseenabled = false;
+                break;
+            case CONTEXT_USER:
+                $disguiseenabled = false;
+                break;
+            default:
+                debugging('Unsupported context.', DEBUG_DEVELOPER);
+                return;
+        }
+
+        if (!$disguiseenabled) {
+            debugging('Disguise is not enabled for this context.', DEBUG_DEVELOPER);
+            return;
+        }
+
+        // Find a disguised user.
+        $disguiseduser = user_manager::get_linked_disguised_user($context->id, $USER->id);
+
+        // Use disguise.
+        if (!$disguiseduser) {
+            debugging('No disguised user found.', DEBUG_DEVELOPER);
+            return;
+        }
+
+        // Disguise.
+        user_manager::disguise_as($context->id, $USER->id, $disguiseduser->id);
+
+        // Enrolment.
+
+        // Role/Permission.
+
+        // Group.
+
+        // Cohort
+    }
 }
