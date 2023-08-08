@@ -243,8 +243,6 @@ function auth_disguise_after_config() {
  */
 function auth_disguise_after_require_login($courseorid = null, $autologinguest = null, $cm = null,
                                            $setwantsurltome = null, $preventredirect = null) {
-
-    global $DB;
     global $USER;
 
     // Do not process if it is not under a course context (or the one below course context)
@@ -266,97 +264,12 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
         $context = context_course::instance($course->id);
     }
 
-    // User disguise is disabled.
-    if (!disguise::is_disguise_enabled_for_context($context)) {
+    // Check if disguise is enabled for this user.
+    if (!disguise::is_disguise_enabled_for_user($context, $USER)) {
         return;
     }
 
-    $course = null;
-    $dcmode_course = false;
-    $dcmode_module = false;
-    $isuserdisguised = $USER->auth === 'disguise'?true:false;
-
-    // Determine and setup non-site course, module context objects and dcmodes.
-    if (!empty($courseorid)) {
-        if (is_object($courseorid)) {
-            // TODO: Course-context disguises are not implemented yet.
-            $course = $courseorid;
-        } else if ($courseorid == SITEID) {
-            // TODO: Site-wide disguises not implemented yet.
-        } else {
-            // TODO: Course-context disguises are not implemented yet.
-            $course = $DB->get_record('course', array('id' => $courseorid), '*', MUST_EXIST);
-        }
-        if ($cm) {
-            if ($cm->course != $course->id) {
-                throw new coding_exception('course and cm parameters in ' .
-                    'auth_disguise_after_require_login() call do not match!!');
-            }
-            // Fetch disguises mode entry record if it exists for module context.
-            $cmcontext = context_module::instance($cm->id, MUST_EXIST);
-            $dbparams = ['contextid' => $cmcontext->id];
-            $dcmode_module = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $dbparams);
-            // TODO: Check access details to $cm via fast_modinfo after any redirects (not here).
-        }
-    }
-
-    // Fetch disguises mode entry record if it exists for non-site course context.
-    // TODO: Write logic checking course custom fields data structure (dependent on config).
-    // TODO: Then, implement the same data structure above for courses, and duplicate/replace.
-    if ($course) {
-        $coursecontext = context_course::instance($course->id, MUST_EXIST);
-        $dbparams = ['contextid' => $coursecontext->id];
-        $dcmode_course = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $dbparams);
-    }
-
-    // If no disguise mode records exist or modes are disabled...
-    if (!$dcmode_course && !$dcmode_module ) {
-        // ...and user is disguised...
-        if ($isuserdisguised) {
-            // TODO: Implement appropriate checks not to redirect, e.g. Teacher/editing mode/etc.
-            if (is_siteadmin($USER->id)) {
-                \core\notification::add('DEBUG: auth/disguise: Not redirecting - is_siteadmin().', \core\notification::INFO);
-            } else {
-                // ...then the user is about to leave disguised mode; send them to a warning.
-                redirect('/auth/disguise/prompt.php');
-            }
-        } else {
-            return;
-        }
-    // Else, course or module has disguises enabled (more than just completely disabled).
-    } else if ($cm) {
-        /* Logic if you're at module context level:
-         * 
-         * Module Mode disabled & user not disguised -> No action, unless course 
-         * Module Mode enabled & user not disguised -> Prompt to switch identity
-         * Module Mode disabled & user disguised -> Prompt to switch identity
-         * Module Mode enabled & user disguised -> Prompt to confirm/choose identity
-         *
-         * TODO: Logic needs re-doing, with updated course options...
-         */
-        if (!$isuserdisguised && !$dcmode_module) {
-            return;
-        } else {
-            // TODO: Implement appropriate checks not to redirect, e.g. Teacher/editing mode/etc.
-            if (is_siteadmin($USER->id)) {
-                \core\notification::add('DEBUG: auth/disguise: Not redirecting - is_siteadmin().', \core\notification::INFO);
-            } else {
-                redirect('/auth/disguise/prompt.php');
-            }
-        }
-    } else {
-        /* Logic if you're at course context level:
-         * 
-         * Course Mode disabled & user not disguised -> No action
-         * Course Mode disabled & user disguised -> Prompt to switch identity
-         * Course Mode enabled & user not disguised -> Prompt to switch identity
-         * Course Mode enabled & user disguised -> Prompt to confirm/choose identity
-         *
-         */
-        // TODO: Write logic checking course custom fields data structure (dependent on config).
-        // TODO: Then, implement the same data structure above for courses, and duplicate/replace.
-    }
-
-    // TODO: What about checking course category level? Is this part of "site" or courseid = catid?
+    // Show a prompt to the user if they are not already disguised.
+    redirect('/auth/disguise/prompt.php');
 
 }
