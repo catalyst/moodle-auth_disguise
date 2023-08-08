@@ -38,6 +38,10 @@ define('AUTH_DISGUISE_MODE_COURSE_EVERYWHERE', 102);
 define('AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE', 200);
 define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', 201);
 
+// Switch ID.
+define('AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID', 1);
+define('AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID', 2);
+
 /**
  * Add in form elements to course module configuration to allow for user
  * disguise modules to be configured. Set the form value(s) from their saved
@@ -243,7 +247,7 @@ function auth_disguise_after_config() {
  */
 function auth_disguise_after_require_login($courseorid = null, $autologinguest = null, $cm = null,
                                            $setwantsurltome = null, $preventredirect = null) {
-    global $USER;
+    global $USER, $PAGE;
 
     // Do not process if it is not under a course context (or the one below course context)
     if (is_null($courseorid)) {
@@ -270,6 +274,10 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
     }
 
     // Show a prompt to the user if they are not already disguised.
-    redirect('/auth/disguise/prompt.php');
+    $url = new moodle_url('/auth/disguise/prompt.php', [
+        'returnurl' => $PAGE->url->out(),
+        'contextid' => $context->id,
+    ]);
+    redirect($url);
 
 }

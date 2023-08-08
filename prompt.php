@@ -23,46 +23,69 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/auth/disguise/lib.php');
 
 redirect_if_major_upgrade_required();
 
 require_login();
 
-$return = optional_param('returnurl', 0, PARAM_LOCALURL);
+$returnurl = optional_param('returnurl', "", PARAM_LOCALURL);
+$contextid = optional_param('contextid', 0, PARAM_INT);
+$switchidentity = optional_param('switchidentity', 0, PARAM_INT);
+
+// Not Switch identity, so just continue.
+if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {
+    $SESSION->ignoreddisguisecontext = $contextid;
+    redirect($returnurl);
+}
+// TODO: SWITCH IDENTITY.
+
 
 // Set up PAGE.
-// TODO: Improve page layout, style, navigation crumbs, and appearance.
-$context = context_system::instance();
-$OUTPUT = $PAGE->get_renderer('admin');
+$context = context::instance_by_id($contextid);
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('title', 'auth_disguise'));
-$PAGE->set_heading(get_string('title', 'auth_disguise'));
 $PAGE->set_url('/auth/disguise/prompt.php');
-unset($url);
+$PAGE->set_pagelayout('admin');
+
+// Check if it is course context.
+if ($context->contextlevel == CONTEXT_COURSE) {
+    $course = $DB->get_record('course', ['id' => $context->instanceid], '*', MUST_EXIST);
+    $PAGE->set_course($course);
+    $PAGE->set_title($course->shortname);
+    $PAGE->set_heading($course->fullname);
+} else if ($context->contextlevel == CONTEXT_MODULE) {
+    $cm = $DB->get_record('course_modules', ['id' => $context->instanceid], '*', MUST_EXIST);
+    $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+    $PAGE->set_cm($cm, $course);
+}
+
 echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('title', 'auth_disguise'));
 
-// TODO: Replace proof-of-concept stub page below with real content, lang
-// strings, functionality.
-?>
+// Alert Box.
+echo $OUTPUT->notification(get_string('switch_id_warning', 'auth_disguise'), 'warning');
 
-<html>
-    <head>
-        <h3>Prompt</h3>
-        <p>You are requesting access to, or leaving, a page where user disguises are enabled.</p>
-        <p>You have the following options:
-        <ul>
-            <li><b>Continue to the page with your current identity</b></li>
-            <ul>
-            <li><a href="<?php echo $return; ?>">Continue</a></li>
-            </ul>
-            <li><b>Switch identity</b></li>
-            <ul>
-            <li><a href="<?php echo $return; ?>">Switch Identity</a></li>
-            </ul>
-        </ul>
-        </p>
-    </head>
-</html>
-<?php
+// Continue button.
+echo $OUTPUT->single_button(
+    new moodle_url('/auth/disguise/prompt.php', [
+            'contextid' => $contextid,
+            'switchidentity' => AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID,
+            'returnurl' => $returnurl
+    ]),
+    get_string('continue_with_current_id', 'auth_disguise'),
+    'get'
+);
+
+// Switch identity button.
+echo $OUTPUT->single_button(
+    new moodle_url('/auth/disguise/prompt.php', [
+            'contextid' => $contextid,
+            'switchidentity' => AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID,
+            'returnurl' => $returnurl
+    ]),
+    get_string('switch_to_disguise_id', 'auth_disguise'),
+    'get'
+);
+
 echo $OUTPUT->footer();
-?>
+

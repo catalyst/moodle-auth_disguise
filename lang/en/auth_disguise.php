@@ -49,3 +49,6 @@ $string['module_mode_disabled'] = 'Disabled - No user disguises permitted in thi
 $string['module_mode_peersafe'] = 'Peer-Safe - Students in this activity appear disguised to other students.';
 $string['module_mode_instructorsafe'] = 'Instructor-Safe - Students in this activity appear disguised to students/instructors.';
 
+$string['switch_id_warning'] = 'You are requesting access to, or leaving, a page where user disguises are enabled.';
+$string['continue_with_current_id'] = 'Continue with current ID';
+$string['switch_to_disguise_id'] = 'Switch to disguise ID';

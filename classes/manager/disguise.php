@@ -59,7 +59,7 @@ class disguise {
     }
 
     public static function is_disguise_enabled_for_user($context, $user) {
-
+        global $SESSION;
         // Check if disguise is enabled for this context.
         if (!self::is_disguise_enabled_for_context($context)) {
             return false;
@@ -67,6 +67,11 @@ class disguise {
 
         // Check if user is already disguised.
         if ($user->auth == 'disguise') {
+            return false;
+        }
+
+        // If the context is ignored, then disguise is disabled.
+        if ($SESSION->ignoreddisguisecontext == $context->id) {
             return false;
         }
 
