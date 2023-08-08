@@ -24,7 +24,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use auth_disguise\manager\user as user_manager;
+use auth_disguise\manager\disguise;
+
+// Constants for user disguise modes.
+define('AUTH_DISGUISE_MODE_DISABLED', 0);
+
+// Course modes.
+define('AUTH_DISGUISE_MODE_COURSE_OPTIONAL', 100);
+define('AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY', 101);
+define('AUTH_DISGUISE_MODE_COURSE_EVERYWHERE', 102);
+
+// Course module modes.
+define('AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE', 200);
+define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', 201);
 
 /**
  * Add in form elements to course module configuration to allow for user
@@ -50,9 +62,9 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
 
         // Add the options to the form.
         $choices = array();
-        $choices['0'] = get_string('module_mode_disabled', 'auth_disguise');
-        $choices['1'] = get_string('module_mode_peersafe', 'auth_disguise');
-        $choices['2'] = get_string('module_mode_instructorsafe', 'auth_disguise');
+        $choices[AUTH_DISGUISE_MODE_DISABLED] = get_string('module_mode_disabled', 'auth_disguise');
+        $choices[AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE] = get_string('module_mode_peersafe', 'auth_disguise');
+        $choices[AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE] = get_string('module_mode_instructorsafe', 'auth_disguise');
         $mform->addElement('header', 'disguises_options', get_string('title', 'auth_disguise'));
         $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_module', 'auth_disguise'), $choices);
         $mform->setType('disguises_mode', PARAM_RAW);
@@ -88,10 +100,10 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
 
     // Add the options to the form.
     $choices = array();
-    $choices['0'] = get_string('course_mode_disabled', 'auth_disguise');
-    $choices['1'] = get_string('course_mode_optional', 'auth_disguise');
-    $choices['2'] = get_string('course_mode_modules_only', 'auth_disguise');
-    $choices['3'] = get_string('course_mode_everywhere', 'auth_disguise');
+    $choices[AUTH_DISGUISE_MODE_DISABLED] = get_string('course_mode_disabled', 'auth_disguise');
+    $choices[AUTH_DISGUISE_MODE_COURSE_OPTIONAL] = get_string('course_mode_optional', 'auth_disguise');
+    $choices[AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY] = get_string('course_mode_modules_only', 'auth_disguise');
+    $choices[AUTH_DISGUISE_MODE_COURSE_EVERYWHERE] = get_string('course_mode_everywhere', 'auth_disguise');
     $mform->addElement('header', 'disguises_options', get_string('title', 'auth_disguise'));
     $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_course', 'auth_disguise'), $choices);
     $mform->setType('disguises_mode', PARAM_RAW);
@@ -126,6 +138,7 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
  * See plugin_extend_coursemodule_edit_post_actions in
  * https://github.com/moodle/moodle/blob/master/course/modlib.php
  */
+
 function auth_disguise_coursemodule_edit_post_actions($data, $course) {
     global $DB;
 
@@ -228,20 +241,35 @@ function auth_disguise_after_config() {
  * @param string $setwantsurltome Requested URL.
  * @param bool $preventredirect Stop Moodle redirects.
  */
-function auth_disguise_after_require_login(
-    $courseorid, 
-    $autologinguest=false,
-    $cm=null,
-    $setwantsurltome=true,
-    $preventredirect=false) {
-
-    // If user disguises are disabled site-wide, abort.
-    if (!get_config('auth_disguise','feature_status_site')) {
-        return;
-    }
+function auth_disguise_after_require_login($courseorid = null, $autologinguest = null, $cm = null,
+                                           $setwantsurltome = null, $preventredirect = null) {
 
     global $DB;
     global $USER;
+
+    // Do not process if it is not under a course context (or the one below course context)
+    if (is_null($courseorid)) {
+        return;
+    }
+
+    // Get current course.
+    if (is_object($courseorid)) {
+        $course = $courseorid;
+    } else {
+        $course = get_course($courseorid);
+    }
+
+    // Determine whether it is a course or module context.
+    if (!is_null($cm)) {
+        $context = context_module::instance($cm->id);
+    } else {
+        $context = context_course::instance($course->id);
+    }
+
+    // User disguise is disabled.
+    if (!disguise::is_disguise_enabled_for_context($context)) {
+        return;
+    }
 
     $course = null;
     $dcmode_course = false;
@@ -331,87 +359,4 @@ function auth_disguise_after_require_login(
 
     // TODO: What about checking course category level? Is this part of "site" or courseid = catid?
 
-}
-
-// TODO: Move this function to somewhere else, could be a separate class.
-function apply_user_disguise() {
-
-    global $USER, $PAGE, $DB;
-
-    // Check if user disguise is enabled.
-
-    // We will need to use Hook API to do this instead of callback.
-
-    // Check if user disguise is enabled
-
-    if (isloggedin() && !isguestuser() ) {
-        debugging('User is logged in, but not as a guest. Disguising user.', DEBUG_DEVELOPER);
-
-        // Context ID.
-        try {
-            // This will throw error if context is empty when AJAX_SCRIPT is true.
-            // $PAGE->context is a magic getter, and it is really annoying to do null check, as isset always return false.
-            $context = $PAGE->context;
-        } catch (Exception $e) {
-            debugging('Context is empty.', DEBUG_DEVELOPER);
-            return;
-        }
-
-        // Check context level to determine whether the disguise is needed.
-        switch ($context->contextlevel) {
-            case CONTEXT_SYSTEM:
-                $disguiseenabled = false;
-                break;
-            case CONTEXT_COURSE:
-                // Exclude site course.
-                if ($context->instanceid == SITEID) {
-                    $disguiseenabled = false;
-                } else {
-                    $disguiseenabled = true;
-                }
-
-                // Check if disguise is enabled for this course.
-
-                break;
-            case CONTEXT_MODULE:
-                // Check if disguise is enabled for this module.
-
-                $disguiseenabled = true;
-                break;
-            case CONTEXT_BLOCK:
-                $disguiseenabled = false;
-                break;
-            case CONTEXT_USER:
-                $disguiseenabled = false;
-                break;
-            default:
-                debugging('Unsupported context.', DEBUG_DEVELOPER);
-                return;
-        }
-
-        if (!$disguiseenabled) {
-            debugging('Disguise is not enabled for this context.', DEBUG_DEVELOPER);
-            return;
-        }
-
-        // Find a disguised user.
-        $disguiseduser = user_manager::get_linked_disguised_user($context->id, $USER->id);
-
-        // Use disguise.
-        if (!$disguiseduser) {
-            debugging('No disguised user found.', DEBUG_DEVELOPER);
-            return;
-        }
-
-        // Disguise.
-        user_manager::disguise_as($context->id, $USER->id, $disguiseduser->id);
-
-        // Enrolment.
-
-        // Role/Permission.
-
-        // Group.
-
-        // Cohort
-    }
 }
