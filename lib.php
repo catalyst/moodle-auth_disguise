@@ -94,41 +94,35 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
  * @param MoodleQuickForm $mform The actual form object (required to modify the form).
  */
 function auth_disguise_course_standard_elements($formwrapper, $mform) {
+    global $DB;
 
-    // If user disguises are disabled site-wide, abort.
-    if (!get_config('auth_disguise','feature_status_site')) {
+    // Return if we are creating new course.
+    // TODO: Include this setting for new course.
+    $course = $formwrapper->get_course();
+    if (empty($course->id)) {
         return;
     }
 
-    global $DB;
+    // If disguise is not enabled, abort.
+    if (!disguise::is_disguise_enabled()) {
+        return;
+    }
 
     // Add the options to the form.
-    $choices = array();
-    $choices[AUTH_DISGUISE_MODE_DISABLED] = get_string('course_mode_disabled', 'auth_disguise');
-    $choices[AUTH_DISGUISE_MODE_COURSE_OPTIONAL] = get_string('course_mode_optional', 'auth_disguise');
-    $choices[AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY] = get_string('course_mode_modules_only', 'auth_disguise');
-    $choices[AUTH_DISGUISE_MODE_COURSE_EVERYWHERE] = get_string('course_mode_everywhere', 'auth_disguise');
+    $choices =[
+        AUTH_DISGUISE_MODE_DISABLED             => get_string('course_mode_disabled', 'auth_disguise'),
+        AUTH_DISGUISE_MODE_COURSE_OPTIONAL      => get_string('course_mode_optional', 'auth_disguise'),
+        AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY  => get_string('course_mode_modules_only', 'auth_disguise'),
+        AUTH_DISGUISE_MODE_COURSE_EVERYWHERE    => get_string('course_mode_everywhere', 'auth_disguise')
+    ];
     $mform->addElement('header', 'disguises_options', get_string('title', 'auth_disguise'));
     $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_course', 'auth_disguise'), $choices);
     $mform->setType('disguises_mode', PARAM_RAW);
 
-    // Retrieve saved value for this context (if any) or set the default.
-    $course = $formwrapper->get_course();
-    if (!empty($course)) {
-        $coursecontext = context_course::instance($course->id);
-        $context = $coursecontext;
-    } else {
-        $coursecontext = null;
-        $context = $categorycontext;
-    }
-
-    $dbparams = ['contextid' => $context->id];
-    $fields = '*';
-    if ($dcmode = $DB->get_record('auth_disguise_ctx_mode', $dbparams, $fields)) {
-        $mform->setDefault('disguises_mode', $dcmode->disguises_mode);
-    } else {
-        $mform->setDefault('disguises_mode', 0); // Disabled
-    }
+    // Default mode.
+    $context = context_course::instance($course->id);
+    $defaultmode = $DB->get_record('auth_disguise_ctx_mode', ['contextid' => $context->id], 'disguises_mode') ?? 0;
+    $mform->setDefault('disguises_mode', $defaultmode);
 }
 
 /**
@@ -250,7 +244,7 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
     global $USER, $PAGE;
 
     // Do not process if it is not under a course context (or the one below course context)
-    if (is_null($courseorid)) {
+    if (empty($courseorid)) {
         return;
     }
 

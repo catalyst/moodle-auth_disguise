@@ -24,6 +24,7 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/auth/disguise/lib.php');
+use auth_disguise\manager\disguise;
 
 redirect_if_major_upgrade_required();
 
@@ -38,7 +39,11 @@ if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {
     $SESSION->ignoreddisguisecontext = $contextid;
     redirect($returnurl);
 }
-// TODO: SWITCH IDENTITY.
+
+// Switch ID.
+if ($switchidentity == AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID) {
+    disguise::disguise_user($contextid, $USER->id);
+}
 
 
 // Set up PAGE.
@@ -88,4 +93,3 @@ echo $OUTPUT->single_button(
 );
 
 echo $OUTPUT->footer();
-

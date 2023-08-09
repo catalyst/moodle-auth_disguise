@@ -80,43 +80,4 @@ class user {
         // Transfer custom fields from real user to disguised user.
     }
 
-    /**
-     * Login in as disguised user.
-     *
-     */
-    public static function disguise_as($contextid, $realuserid, $disguiseduserid) {
-        // Stop if the user is already disguised.
-        if (isset($_SESSION['USERINDISGUISE'])) {
-            // Check if the context is the same.
-            // If not the same we may allow new disguise.
-            return;
-        }
-
-        // SESSION.
-        $_SESSION = array();
-        $_SESSION['DISGUISESESSION'] = clone($GLOBALS['SESSION']);
-        $GLOBALS['SESSION'] = new \stdClass();
-        $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
-
-        // Avoid using REALUSER as it may mess up 'loginas'.
-        $_SESSION['USERINDISGUISE'] = clone($GLOBALS['USER']);
-
-        // DISGUISED USER.
-        $disguiseduser = get_complete_user_data('id', $disguiseduserid);
-        $disguiseduser->userindisguise = $_SESSION['USERINDISGUISE'];
-        \core\session\manager::set_user($disguiseduser);
-
-        // Change login info, similar to loginas  in outputrenderers?.
-    }
-
-    public static function back_to_real_user() {
-        // Or should we ask user to logout instead.
-        if (isset($_SESSION['USERINDISGUISE'])) {
-            $_SESSION['SESSION'] = clone($_SESSION['DISGUISESESSION']);
-            \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
-            unset($_SESSION['USERINDISGUISE']);
-            unset($_SESSION['DISGUISESESSION']);
-        }
-    }
-
 }

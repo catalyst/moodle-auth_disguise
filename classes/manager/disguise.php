@@ -16,6 +16,8 @@
 
 namespace auth_disguise\manager;
 
+use core\check\performance\debugging;
+
 require_once($CFG->dirroot . '/auth/disguise/lib.php');
 
 defined('MOODLE_INTERNAL') || die();
@@ -81,6 +83,44 @@ class disguise {
 //        }
 
         return true;
+    }
+
+    public static function disguise_user($contextid, $realuserid) {
+        // Get disguise.
+        $disguise = user::get_disguised_user($contextid, $realuserid);
+
+        // Check disguise.
+        if (!$disguise) {
+            // This should not happen.
+            debugging('Disguise user not found.', DEBUG_DEVELOPER);
+            return;
+        }
+
+        // SESSION.
+        $_SESSION = array();
+        $_SESSION['DISGUISESESSION'] = clone($GLOBALS['SESSION']);
+        $GLOBALS['SESSION'] = new \stdClass();
+        $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
+
+        // Avoid using REALUSER as it may mess up 'loginas'.
+        $_SESSION['USERINDISGUISE'] = clone($GLOBALS['USER']);
+
+        // DISGUISED USER.
+        $disguiseduser = get_complete_user_data('id', $disguise->id);
+        $disguiseduser->userindisguise = $_SESSION['USERINDISGUISE'];
+        \core\session\manager::set_user($disguiseduser);
+
+        // Change login info, similar to loginas  in outputrenderers?.
+    }
+
+    public static function back_to_real_user() {
+        // Or should we ask user to logout instead.
+        if (isset($_SESSION['USERINDISGUISE'])) {
+            $_SESSION['SESSION'] = clone($_SESSION['DISGUISESESSION']);
+            \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
+            unset($_SESSION['USERINDISGUISE']);
+            unset($_SESSION['DISGUISESESSION']);
+        }
     }
 
 }

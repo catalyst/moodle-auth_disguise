@@ -31,24 +31,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 function xmldb_auth_disguise_upgrade($oldversion) {
     global $DB;
-
     $dbman = $DB->get_manager();
-
-    if ($oldversion < 2023063001) {
-        // Table to be updated.
-        $table = new xmldb_table('auth_disguise_ctx_mode');
-
-        // Field to be dropped.
-        $field = new xmldb_field('cmid');
-
-        // Conditionally drop an old field.
-        if ($dbman->field_exists($table, $field)) {
-            $dbman->drop_field($table, $field);
-        }
-
-        // Auth LTI savepoint reached.
-        upgrade_plugin_savepoint(true, 2023063001, 'auth', 'disguise');
-    }
-
     return true;
 }
