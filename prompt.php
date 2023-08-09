@@ -43,6 +43,7 @@ if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {
 // Switch ID.
 if ($switchidentity == AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID) {
     disguise::disguise_user($contextid, $USER->id);
+    redirect($returnurl);
 }
 
 

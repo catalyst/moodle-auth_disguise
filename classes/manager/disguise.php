@@ -16,8 +16,6 @@
 
 namespace auth_disguise\manager;
 
-use core\check\performance\debugging;
-
 require_once($CFG->dirroot . '/auth/disguise/lib.php');
 
 defined('MOODLE_INTERNAL') || die();
@@ -73,21 +71,21 @@ class disguise {
         }
 
         // If the context is ignored, then disguise is disabled.
-        if ($SESSION->ignoreddisguisecontext == $context->id) {
+        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $context->id) {
             return false;
         }
 
         // Disabled for site admin.
-//        if (is_siteadmin($user->id)) {
-//            return false;
-//        }
+        if (is_siteadmin($user->id)) {
+            return false;
+        }
 
         return true;
     }
 
     public static function disguise_user($contextid, $realuserid) {
         // Get disguise.
-        $disguise = user::get_disguised_user($contextid, $realuserid);
+        $disguise = user::get_disguise_for_user($contextid, $realuserid);
 
         // Check disguise.
         if (!$disguise) {
@@ -104,18 +102,25 @@ class disguise {
 
         // Avoid using REALUSER as it may mess up 'loginas'.
         $_SESSION['USERINDISGUISE'] = clone($GLOBALS['USER']);
+        $_SESSION['DISGUISECONTEXT'] = $contextid;
 
-        // DISGUISED USER.
+        // Disguise.
         $disguiseduser = get_complete_user_data('id', $disguise->id);
         $disguiseduser->userindisguise = $_SESSION['USERINDISGUISE'];
         \core\session\manager::set_user($disguiseduser);
 
-        // Change login info, similar to loginas  in outputrenderers?.
+        // Enrol.
+        enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
     }
 
-    public static function back_to_real_user() {
-        // Or should we ask user to logout instead.
-        if (isset($_SESSION['USERINDISGUISE'])) {
+    public static function back_to_real_user_if_required($contextid) {
+        if (!isset($_SESSION['USERINDISGUISE']) || !isset($_SESSION['DISGUISECONTEXT'])) {
+            return;
+        }
+
+        // Go back to real user if the context change.
+        // TODO: Check if the context is a child of the disguise context.
+        if ($contextid != $_SESSION['DISGUISECONTEXT']) {
             $_SESSION['SESSION'] = clone($_SESSION['DISGUISESESSION']);
             \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
             unset($_SESSION['USERINDISGUISE']);

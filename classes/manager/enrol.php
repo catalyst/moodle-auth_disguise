@@ -25,7 +25,28 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class role {
+class enrol {
+
+    public static function enrol_disguise($contextid, $realuserid, $disguiseid) {
+        // Check if the context is course context.
+        $context = \context::instance_by_id($contextid);
+
+//        if ($context->contextlevel == CONTEXT_MODULE) {
+//            // Get parent of the context.
+//
+//        }
+
+        // Check if the user
+
+        // Get courseid from the context
+        $courseid = $context->instanceid;
+        $course = \get_course($courseid);
+
+        // Get enrolment method of the course.
+        $enrolment = \enrol_get_plugin('disguise');
+        $id = $enrolment->add_instance($course, []);
+
+    }
 
     /**
      * Do we clone the role assignments when a user is disguised?

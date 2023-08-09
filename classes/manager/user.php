@@ -16,6 +16,8 @@
 
 namespace auth_disguise\manager;
 
+require_once($CFG->dirroot . '/user/lib.php');
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -33,37 +35,109 @@ class user {
      * IF there is no unlinked disguised user, it will create a new disguised user and link it with the real user.
      *
      */
-    public static function get_linked_disguised_user($contextid, $realuserid): \stdClass {
-        global $DB;
-        $user = new \stdClass();
-
-        // Hardcode the user ID for now, for analysing feasibility.
-        $user = $DB->get_record('user', ["id" => 3]);
-
+    public static function get_disguise_for_user($contextid, $realuserid) {
         // Return existing linked user.
+        $disguise = self::get_mapped_disguise($contextid, $realuserid);
 
         // If there is no linked user, map existing unlinked disguised user.
+        if (!$disguise) {
+            $disguise = self::get_unmapped_disguise($contextid);
+            if ($disguise) {
+                self::map_user($contextid, $realuserid, $disguise->id);
+            }
+        }
 
         // If there is no unlinked disguised user, create new pool of users and map one of them.
+        if (!$disguise) {
+            $disguise = self::create_disguise($contextid);
+            self::map_user($contextid, $realuserid, $disguise->id);
+        }
 
-        return $user;
+        return $disguise;
     }
 
-    public static function link_user($contextid, $realuserid, $disguiseduserid) {
+    public static function map_user($contextid, $realuserid, $disguiseid) {
+        global $DB;
+
+        // Sanity check if the user is already mapped.
+        if (self::get_mapped_disguise($contextid, $realuserid)) {
+            Debugging('User is already mapped.', DEBUG_DEVELOPER);
+            return;
+        }
+
         // Link the user with the disguised user.
+        $DB->insert_record('auth_disguise_user_map', [
+            'contextid' => $contextid,
+            'userid' => $realuserid,
+            'disguiseid' => $disguiseid,
+        ]);
+
+        // Remove disguise from the unmapped disguise pool.
+        $DB->delete_records('auth_disguise_unmapped_disg', [
+            'contextid' => $contextid,
+            'disguiseid' => $disguiseid,
+        ]);
     }
 
-    public static function unlink_user($contextid, $realuserid) {
+    public static function unmap_user($contextid, $realuserid) {
         // Perform transferring data and clean up.
         // Unlink the user with the disguised user.
     }
 
-    public static function get_disguised_user($contextid, $realuserid) {
-        // Return the disguised user.
+    public static function get_mapped_disguise($contextid, $realuserid) {
+        global $DB;
+
+        // Get disguise mapping.
+        $disuisemap = $DB->get_record('auth_disguise_user_map', [
+            'contextid' => $contextid,
+            'userid' => $realuserid
+        ]);
+
+        // Return the disguise user.
+        if ($disuisemap) {
+            return $DB->get_record('user', ['id' => $disuisemap->disguiseid]);
+        } else {
+            return null;
+        }
     }
 
-    public static function create_disguised_users() {
-        // Return all the disguised users.
+    public static function get_unmapped_disguise($contextid) {
+        global $DB;
+
+        // List of the unmapped disguise.
+        $disguises = $DB->get_records('auth_disguise_unmapped_disg', [
+            'contextid' => $contextid,
+        ]);
+
+        // Return the first unmapped disguise.
+        return reset($disguises);
+    }
+
+    public static function create_disguise($contextid) {
+        global $DB, $CFG;
+
+        // Create a new disguise.
+        $user = new \stdClass();
+
+        $user->firstname = time();
+        $user->lastname = 'Disguise';
+        $user->username = sha1(time() . '_' . $contextid);
+        $email = $user->username . "@example.com";
+        $email = \core_user::clean_field($email, 'email');
+        $user->email = $email;
+        $user->auth = 'disguise';
+        $user->mnethostid = $CFG->mnet_localhost_id;
+        $user->password = '';
+        $user->confirmed = 1;
+        $user->id = user_create_user($user, false);
+
+        // Add the new disguise to the pool.
+        $DB->insert_record('auth_disguise_unmapped_disg', [
+            'contextid' => $contextid,
+            'disguiseid' => $user->id,
+        ]);
+
+        return $user;
     }
 
     public static function prune_user_disguise($realuserid) {
@@ -76,7 +150,7 @@ class user {
      * It will reveal the real user if the data is unique?
      *
      */
-    public static function clone_custom_fields($realuserid, $disguiseduserid) {
+    public static function clone_custom_fields($realuserid, $disguiseid) {
         // Transfer custom fields from real user to disguised user.
     }
 
