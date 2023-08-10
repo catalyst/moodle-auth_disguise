@@ -52,8 +52,13 @@ define('AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID', 2);
  */
 function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
 
-    // If user disguises are disabled site-wide, abort.
-    if (!get_config('auth_disguise','feature_status_site')) {
+    $module = $formwrapper->get_coursemodule();
+    if (empty($module->id)) {
+        return;
+    }
+
+    // If disguise is not enabled, abort.
+    if (!disguise::is_disguise_enabled()) {
         return;
     }
 
@@ -65,23 +70,19 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
         global $DB;
 
         // Add the options to the form.
-        $choices = array();
-        $choices[AUTH_DISGUISE_MODE_DISABLED] = get_string('module_mode_disabled', 'auth_disguise');
-        $choices[AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE] = get_string('module_mode_peersafe', 'auth_disguise');
-        $choices[AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE] = get_string('module_mode_instructorsafe', 'auth_disguise');
+        $choices = [
+            AUTH_DISGUISE_MODE_DISABLED => get_string('module_mode_disabled', 'auth_disguise'),
+            AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE => get_string('module_mode_peersafe', 'auth_disguise'),
+            AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE => get_string('module_mode_instructorsafe', 'auth_disguise'),
+        ];
         $mform->addElement('header', 'disguises_options', get_string('title', 'auth_disguise'));
         $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_module', 'auth_disguise'), $choices);
         $mform->setType('disguises_mode', PARAM_RAW);
 
-        // Retrieve saved value for this context (if any) or set the default.
-        $context = context_module::instance($formwrapper->get_coursemodule()->id);
-        $dbparams = ['contextid' => $context->id];
-        $fields = '*';
-        if ($dcmode = $DB->get_record('auth_disguise_ctx_mode', $dbparams, $fields)) {
-            $mform->setDefault('disguises_mode', $dcmode->disguises_mode);
-        } else {
-            $mform->setDefault('disguises_mode', 0); // Disabled
-        }
+        // Default mode.
+        $context = context_module::instance($module->id);
+        $defaultmode = $DB->get_record('auth_disguise_ctx_mode', ['contextid' => $context->id], 'disguises_mode') ?? 0;
+        $mform->setDefault('disguises_mode', $defaultmode);
     }
 }
 
