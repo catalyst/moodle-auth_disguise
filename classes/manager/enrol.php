@@ -28,46 +28,58 @@ defined('MOODLE_INTERNAL') || die();
 class enrol {
 
     public static function enrol_disguise($contextid, $realuserid, $disguiseid) {
-        // Check if the context is course context.
+        global $DB;
+
+        // Course from the context
+        $context = self::get_course_context($contextid);
+        $course = \get_course($context->instanceid);
+
+        // Check if disguise user is already enrolled.
+        $isenroled = self::is_enrolled($disguiseid, $context->id);
+
+        // Check if the enrolment method is already added to the course.
+        $instances = enrol_get_instances($course->id, true);
+        foreach ($instances as $instance) {
+            if ($instance->enrol === 'disguise') {
+                $enrolinstance = $instance;
+                break;
+            }
+        }
+
+        // Disguise Enrolment.
+        $enrolplugin = \enrol_get_plugin('disguise');
+        if (!empty($enrolinstance)) {
+            // Create a disguise enrolment instance.
+            $id = $enrolplugin->add_instance($course);
+
+            // Get the enrolment instance.
+            $enrolinstance = $DB->get_record('enrol', array('id' => $id), '*', MUST_EXIST);
+        }
+        $role = $DB->get_record('role', array('shortname' => 'student'), '*', MUST_EXIST);
+
+        $enrolplugin->enrol_user($enrolinstance, $disguiseid, $role->id);
+
+    }
+
+    public static function get_course_context($contextid) {
+        global $DB;
         $context = \context::instance_by_id($contextid);
 
-//        if ($context->contextlevel == CONTEXT_MODULE) {
-//            // Get parent of the context.
-//
-//        }
+        // Get parent course context if it is course module context.
+        if ($context->contextlevel == CONTEXT_MODULE) {
+            // Get the course module.
+            $cm = $DB->get_record('course_modules', ['id' => $context->instanceid], '*', MUST_EXIST);
+            // Get the course context.
+            $context = \context_course::instance($cm->course);
+        }
 
-        // Check if the user
-
-        // Get courseid from the context
-        $courseid = $context->instanceid;
-        $course = \get_course($courseid);
-
-        // Get enrolment method of the course.
-        $enrolment = \enrol_get_plugin('disguise');
-        $id = $enrolment->add_instance($course, []);
-
+        return $context;
     }
 
-    /**
-     * Do we clone the role assignments when a user is disguised?
-     * Or simply assign a predefined role to the disguised user?
-     *
-     */
-    public static function clone_role_from_real_user($courseid, $realuserid, $disguiseduserid) {
-        // Check if the link between real user and disguised user is valid.
-
-        // Get all role assignments of real user.
-
-        // Clone all role assignments of real user to disguised user.
-        // Condition to clone role assignments:
+    public static function is_enrolled($userid, $contextid) {
+        $coursecontext = self::get_course_context($contextid);
+        // Check if real user is enrolled in the course.
+        $courses = enrol_get_all_users_courses($userid);
+        return array_key_exists($coursecontext->instanceid, $courses);
     }
-
-    /**
-     * Remove role assignment from disguised user in a course.
-     *
-     */
-    public static function remove_roles_from_disguised_user($courseid, $disguiseduserid) {
-        // Remove a role assignment of disguised user.
-    }
-
 }

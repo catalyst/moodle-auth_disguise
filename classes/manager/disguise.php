@@ -37,20 +37,19 @@ class disguise {
         return true;
     }
 
-    public static function get_disguise_mode_for_context($context)
-    {
+    public static function get_disguise_mode_for_context(int $contextid) {
         global $DB;
-        $params = ['contextid' => $context->id];
+        $params = ['contextid' => $contextid];
         return $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $params);
     }
 
-    public static function is_disguise_enabled_for_context($context) {
+    public static function is_disguise_enabled_for_context(int $contextid) {
         if (!self::is_disguise_enabled()) {
             return false;
         }
 
         // Check if disguise is enabled for this context.
-        $disguisemode = self::get_disguise_mode_for_context($context);
+        $disguisemode = self::get_disguise_mode_for_context($contextid);
         if ($disguisemode == AUTH_DISGUISE_MODE_DISABLED) {
             return false;
         }
@@ -58,22 +57,29 @@ class disguise {
         return true;
     }
 
-    public static function is_disguise_enabled_for_user($context, $user) {
+    public static function is_disguise_enabled_for_user(int $contextid, int $userid) {
         global $SESSION;
         // Check if disguise is enabled for this context.
-        if (!self::is_disguise_enabled_for_context($context)) {
+        if (!self::is_disguise_enabled_for_context($contextid)) {
             return false;
         }
 
         // Check if user is already disguised.
+        $user = get_complete_user_data('id', $userid);
         if ($user->auth == 'disguise') {
             return false;
         }
 
         // If the context is ignored, then disguise is disabled.
-        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $context->id) {
+        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $contextid) {
             return false;
         }
+
+        // Only allow disguise if user is enrolled in the course.
+        if (!enrol::is_enrolled($userid, $contextid)) {
+            return false;
+        }
+
 
         // Disabled for site admin.
         if (is_siteadmin($user->id)) {
