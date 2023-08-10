@@ -30,12 +30,14 @@ class enrol {
     public static function enrol_disguise($contextid, $realuserid, $disguiseid) {
         global $DB;
 
-        // Course from the context
+        // Course from the context.
         $context = self::get_course_context($contextid);
         $course = \get_course($context->instanceid);
 
         // Check if disguise user is already enrolled.
-        $isenroled = self::is_enrolled($disguiseid, $context->id);
+        if (self::is_enrolled($disguiseid, $context->id)) {
+            return;
+        }
 
         // Check if the enrolment method is already added to the course.
         $instances = enrol_get_instances($course->id, true);
@@ -48,7 +50,7 @@ class enrol {
 
         // Disguise Enrolment.
         $enrolplugin = \enrol_get_plugin('disguise');
-        if (!empty($enrolinstance)) {
+        if (empty($enrolinstance)) {
             // Create a disguise enrolment instance.
             $id = $enrolplugin->add_instance($course);
 
