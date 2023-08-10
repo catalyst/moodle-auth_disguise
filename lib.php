@@ -141,15 +141,13 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
 function auth_disguise_coursemodule_edit_post_actions($data, $course) {
     global $DB;
 
-    // If user disguises are disabled site-wide, abort.
-    if (!get_config('auth_disguise','feature_status_site')) {
-        return;
+    // If disguise is not enabled, abort.
+    if (!disguise::is_disguise_enabled()) {
+        return $data;
     }
-
     // if there is no data, then there is nothing to do.
     if (empty($data->disguises_mode)) {
-        debugging('No data to process for user disguises.', DEBUG_DEVELOPER);
-        return;
+        return $data;
     }
 
     // Add or update disguise mode for course module and context.
@@ -187,13 +185,12 @@ function auth_disguise_coursemodule_edit_post_actions($data, $course) {
  * https://github.com/moodle/moodle/blob/master/course/modlib.php
  */
 function auth_disguise_course_edit_post_actions($data, $oldcourse) {
-
-    // If user disguises are disabled site-wide, abort.
-    if (!get_config('auth_disguise','feature_status_site')) {
-        return;
-    }
-
     global $DB;
+
+    // If disguise is not enabled, abort.
+    if (!disguise::is_disguise_enabled()) {
+        return $data;
+    }
 
     // Add or update disguise mode for course and context.
     $context = context_course::instance($data->id);
