@@ -19,36 +19,26 @@ namespace auth_disguise\manager;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class auth_disguise\manager\cohort
+ * Class auth_disguise\manager\context
  *
  * @author  Nathan Nguyen <nathannguyen@catalyst-au.net>
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cohort {
+class disguise_context {
+    public static function get_course_context($contextid) {
+        global $DB;
+        $context = \context::instance_by_id($contextid);
 
-    /**
-     * Clone cohort of real user to disguised user.
-     * Why do we need it? availability restriction
-     * Or bypass restriction somehow?
-     */
-    public static function clone_cohorts_to_disguised_user($realuserid, $disguiseduserid) {
-        // Check if the link between real user and disguised user is valid.
+        // Get parent course context if it is course module context.
+        if ($context->contextlevel == CONTEXT_MODULE) {
+            // Get the course module.
+            $cm = $DB->get_record('course_modules', ['id' => $context->instanceid], '*', MUST_EXIST);
+            // Get the course context.
+            $context = \context_course::instance($cm->course);
+        }
 
-        // Get all cohorts of real user.
-
-        // Transfer all cohorts of real user to disguised user.
-        // Condition to transfer cohort:
+        return $context;
     }
-
-    /**
-     * Remove all cohorts from disguised user.
-     *
-     */
-    public static function remove_cohorts_from_disguised_user($disguiseduserid) {
-        // Remove all cohorts of disguised user.
-    }
-
-
 
 }

@@ -127,8 +127,7 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
 }
 
 /**
- * Process user disguises configuration from submitted form and save it to the
- * database.
+ * Process user disguises configuration from submitted form and save it to the database.
  *
  * @param stdClass $data
  * @param stdClass $course
@@ -174,8 +173,7 @@ function auth_disguise_coursemodule_edit_post_actions($data, $course) {
 }
 
 /**
- * Process user disguises configuration from submitted form and save it to the
- * database.
+ * Process user disguises configuration from submitted form and save it to the database.
  *
  * @param stdClass $data
  * @param stdClass $course

@@ -48,6 +48,13 @@ class disguise {
             return false;
         }
 
+        // Check if the disguise is applied everywhere in the course.
+        $coursecontext = disguise_context::get_course_context($contextid);
+        $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
+        if ($disguisemode == AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
+            return true;
+        }
+
         // Check if disguise is enabled for this context.
         $disguisemode = self::get_disguise_mode_for_context($contextid);
         if ($disguisemode == AUTH_DISGUISE_MODE_DISABLED) {
@@ -59,6 +66,7 @@ class disguise {
 
     public static function is_disguise_enabled_for_user(int $contextid, int $userid) {
         global $SESSION;
+
         // Check if disguise is enabled for this context.
         if (!self::is_disguise_enabled_for_context($contextid)) {
             return false;
@@ -76,7 +84,7 @@ class disguise {
         }
 
         // Only allow disguise if user is enrolled in the course.
-        if (!enrol::is_enrolled($userid, $contextid)) {
+        if (!disguise_enrol::is_enrolled($userid, $contextid)) {
             return false;
         }
 
@@ -91,7 +99,7 @@ class disguise {
 
     public static function disguise_user($contextid, $realuserid) {
         // Get disguise.
-        $disguise = user::get_disguise_for_user($contextid, $realuserid);
+        $disguise = disguise_user::get_disguise_for_user($contextid, $realuserid);
 
         // Check disguise.
         if (!$disguise) {
@@ -116,11 +124,18 @@ class disguise {
         \core\session\manager::set_user($disguiseduser);
 
         // Enrol.
-        enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
+        disguise_enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
     }
 
     public static function back_to_real_user_if_required($contextid) {
         if (!isset($_SESSION['USERINDISGUISE']) || !isset($_SESSION['DISGUISECONTEXT'])) {
+            return;
+        }
+
+        // Check if the context is changed.
+        // If the disguise context is a course context, changes in course module context should not change the disguise.
+        $coursecontext = disguise_context::get_course_context($contextid);
+        if ($coursecontext->id == $_SESSION['DISGUISECONTEXT']) {
             return;
         }
 

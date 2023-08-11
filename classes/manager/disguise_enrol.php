@@ -25,13 +25,13 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class enrol {
+class disguise_enrol {
 
     public static function enrol_disguise($contextid, $realuserid, $disguiseid) {
         global $DB;
 
         // Course from the context.
-        $context = self::get_course_context($contextid);
+        $context = disguise_context::get_course_context($contextid);
         $course = \get_course($context->instanceid);
 
         // Check if disguise user is already enrolled.
@@ -63,23 +63,8 @@ class enrol {
 
     }
 
-    public static function get_course_context($contextid) {
-        global $DB;
-        $context = \context::instance_by_id($contextid);
-
-        // Get parent course context if it is course module context.
-        if ($context->contextlevel == CONTEXT_MODULE) {
-            // Get the course module.
-            $cm = $DB->get_record('course_modules', ['id' => $context->instanceid], '*', MUST_EXIST);
-            // Get the course context.
-            $context = \context_course::instance($cm->course);
-        }
-
-        return $context;
-    }
-
     public static function is_enrolled($userid, $contextid) {
-        $coursecontext = self::get_course_context($contextid);
+        $coursecontext = disguise_context::get_course_context($contextid);
         // Check if real user is enrolled in the course.
         $courses = enrol_get_all_users_courses($userid);
         return array_key_exists($coursecontext->instanceid, $courses);
