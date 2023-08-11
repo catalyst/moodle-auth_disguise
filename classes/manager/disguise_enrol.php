@@ -16,6 +16,8 @@
 
 namespace auth_disguise\manager;
 
+use core\check\performance\debugging;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -29,6 +31,13 @@ class disguise_enrol {
 
     public static function enrol_disguise($contextid, $realuserid, $disguiseid) {
         global $DB;
+
+        // Check if real user.
+        $user = get_complete_user_data('id', $realuserid);
+        if ($user->auth == 'disguise') {
+            debugging('Real user id is invalid. This should not happen', DEBUG_DEVELOPER);
+            return;
+        }
 
         // Course from the context.
         $context = disguise_context::get_course_context($contextid);
