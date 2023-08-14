@@ -29,7 +29,6 @@ require_once($CFG->libdir . '/adminlib.php');
 defined('MOODLE_INTERNAL') || die();
 admin_externalpage_setup('auth_disguise_keyword');
 
-
 // Build the page output
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('keyword_page', 'auth_disguise'));

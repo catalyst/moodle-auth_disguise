@@ -29,8 +29,11 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion the version we are upgrading from.
  * @return bool result.
  */
-function xmldb_auth_disguise_upgrade($oldversion) {
-    global $DB;
-    $dbman = $DB->get_manager();
-    return true;
+use auth_disguise\manager\disguise_keyword;
+
+function xmldb_auth_disguise_install() {
+    disguise_keyword::create_animal_keyword();
+    disguise_keyword::create_color_keyword();
+    disguise_keyword::create_fruit_keyword();
+    disguise_keyword::create_country_keyword();
 }
