@@ -119,8 +119,8 @@ class disguise_user {
         // Create a new disguise.
         $user = new \stdClass();
 
-        $user->firstname = time();
-        $user->lastname = 'Disguise';
+        $user->firstname = disguise_keyword::build_name(['color']);
+        $user->lastname = disguise_keyword::build_name(['animal']);
         $user->username = sha1(time() . '_' . $contextid);
         $email = $user->username . "@example.com";
         $email = \core_user::clean_field($email, 'email');

@@ -97,5 +97,26 @@ class disguise_keyword {
         self::create_keyword($keyword, $items);
     }
 
+    // Build name from keywords
+    public static function build_name($keywords) {
+        global $DB;
+
+        $name = "";
+        foreach ($keywords as $keyword) {
+            // Retrieve keyword record.
+            $record = $DB->get_record('auth_disguise_naming_keyword', array('keyword' => $keyword));
+            if (!$record) {
+                continue;
+            }
+
+            // Retrieve items for keyword.
+            $items = $DB->get_records('auth_disguise_naming_item', array('keywordid' => $record->id));
+            if (empty($items)) {
+                continue;
+            }
+            $name .= $items[array_rand($items)]->name . " ";
+        }
+        return $name;
+    }
 
 }
