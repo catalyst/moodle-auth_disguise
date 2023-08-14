@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($ADMIN->fulltree) {
+if ($hassiteconfig) {
 
     // Display plugin description.
     $settings->add(new admin_setting_heading('auth_disguise/pluginname', '',
@@ -44,4 +44,18 @@ if ($ADMIN->fulltree) {
     $authplugin = get_auth_plugin('disguise');
     display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields,
             get_string('auth_fieldlocks_help', 'auth'), false, false);
+
+    $ADMIN->add('authsettings', new admin_category('auth_disguise', get_string('pluginname', 'auth_disguise')));
+    $ADMIN->add('auth_disguise', $settings);
+    // To prevent the settings from being displayed twice.
+    $settings = null;
+
+    // External admin page to define keywords.
+    $ADMIN->add('auth_disguise',
+        new admin_externalpage(
+            'auth_disguise_keyword',
+            get_string('keyword_page', 'auth_disguise'),
+            new moodle_url($CFG->wwwroot . '/auth/disguise/keyword.php')
+        )
+    );
 }

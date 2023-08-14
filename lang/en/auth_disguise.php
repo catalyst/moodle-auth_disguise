@@ -52,3 +52,5 @@ $string['module_mode_instructorsafe'] = 'Instructor-Safe - Students in this acti
 $string['switch_id_warning'] = 'You are requesting access to, or leaving, a page where user disguises are enabled.';
 $string['continue_with_current_id'] = 'Continue with current ID';
 $string['switch_to_disguise_id'] = 'Switch to disguise ID';
+
+$string['keyword_page'] = 'Manage keywords';
