@@ -42,6 +42,9 @@ define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', 201);
 define('AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID', 1);
 define('AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID', 2);
 
+// Keywords per page.
+define('AUTH_DISGUISE_KEYWORDS_PER_PAGE', 10);
+
 /**
  * Add in form elements to course module configuration to allow for user
  * disguise modules to be configured. Set the form value(s) from their saved

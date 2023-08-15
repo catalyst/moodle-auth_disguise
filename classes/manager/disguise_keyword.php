@@ -47,11 +47,27 @@ class disguise_keyword {
         }
     }
 
-    public static function get_keyword($keyword) {
+    // get all keywords
+    public static function get_keyword_records() {
+        global $DB;
+        $records = $DB->get_records('auth_disguise_naming_keyword');
+        return $records;
+    }
+
+    public static function get_keyword_record($keyword) {
         global $DB;
 
         $record = $DB->get_record('auth_disguise_naming_keyword', array('keyword' => $keyword));
         return $record;
+    }
+
+    public static function count_keyword_item($keyword) {
+        global $DB;
+
+        // Get id of keyword.
+        $record = self::get_keyword_record($keyword);
+
+        return $DB->count_records('auth_disguise_naming_item', array('keywordid' => $record->id));
     }
 
     // Generate items for color keyword

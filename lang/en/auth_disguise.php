@@ -54,3 +54,6 @@ $string['continue_with_current_id'] = 'Continue with current ID';
 $string['switch_to_disguise_id'] = 'Switch to disguise ID';
 
 $string['keyword_page'] = 'Manage keywords';
+$string['keywords'] = 'Keywords';
+$string['count'] = 'Number of items';
+$string['action'] = 'Action';
