@@ -85,7 +85,7 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
 
         // Default mode.
         $context = context_module::instance($module->id);
-        $defaultmode = $DB->get_record('auth_disguise_ctx_mode', ['contextid' => $context->id], 'disguises_mode') ?? 0;
+        $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
         $mform->setDefault('disguises_mode', $defaultmode);
     }
 }
@@ -126,7 +126,7 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
 
     // Default mode.
     $context = context_course::instance($course->id);
-    $defaultmode = $DB->get_record('auth_disguise_ctx_mode', ['contextid' => $context->id], 'disguises_mode') ?? 0;
+    $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
     $mform->setDefault('disguises_mode', $defaultmode);
 }
 
