@@ -69,13 +69,42 @@ class disguise_keyword {
         return $record;
     }
 
-    public static function count_keyword_item($keyword) {
+    public static function get_item_records_from_keywordid($keywordid) {
         global $DB;
 
+        return $DB->get_records('auth_disguise_naming_item', array('keywordid' => $keywordid));
+    }
+
+    // Get all items of a keyword.
+    public static function get_item_records_from_keyword($keyword) {
+        // Get id of keyword.
+        $record = self::get_keyword_record($keyword);
+
+        // Get items of keyword.
+        return self::get_item_records_from_keywordid($record->id);
+    }
+
+    public static function count_keyword_item($keyword) {
+        global $DB;
         // Get id of keyword.
         $record = self::get_keyword_record($keyword);
 
         return $DB->count_records('auth_disguise_naming_item', array('keywordid' => $record->id));
+    }
+
+    // add item to keyword
+    public static function add_item_to_keyword($keyword, $name) {
+        global $DB;
+
+        // Get id of keyword.
+        $record = self::get_keyword_record($keyword);
+        $keywordid = $record->id;
+
+        // Create new item.
+        $record = new \stdClass();
+        $record->keywordid = $keywordid;
+        $record->name = $name;
+        $DB->insert_record('auth_disguise_naming_item', $record);
     }
 
     // Generate items for color keyword

@@ -62,3 +62,9 @@ $string['keywords'] = 'Keywords';
 $string['new_keyword'] = 'New keyword';
 $string['count'] = 'Number of items';
 $string['action'] = 'Action';
+
+// Item page strings.
+$string['item_page'] = 'Manage items';
+$string['new_item'] = 'New item';
+$string['item'] = 'Item';
+

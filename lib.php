@@ -44,6 +44,7 @@ define('AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID', 2);
 
 // Keywords per page.
 define('AUTH_DISGUISE_KEYWORDS_PER_PAGE', 10);
+define('AUTH_DISGUISE_KEYWORD_ITEMS_PER_PAGE', 100);
 
 /**
  * Add in form elements to course module configuration to allow for user

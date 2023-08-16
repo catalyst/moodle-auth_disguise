@@ -23,7 +23,7 @@
  */
 
 use auth_disguise\manager\disguise_keyword;
-use auth_disguise\output\keyword_collection;
+use auth_disguise\output\item_collection;
 
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
@@ -34,6 +34,8 @@ admin_externalpage_setup('auth_disguise_keyword');
 
 require_admin();
 
+//required keyword
+$keyword    = required_param('keyword', PARAM_ALPHA);
 $sortby     = optional_param('sort', 'name', PARAM_ALPHA);
 $sorthow    = optional_param('dir', 'ASC', PARAM_ALPHA);
 $page       = optional_param('page', 0, PARAM_INT);
@@ -52,26 +54,27 @@ if ($page < 0) {
 
 // Build the page output
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('keyword_page', 'auth_disguise'));
+echo $OUTPUT->heading(get_string('item_page', 'auth_disguise'));
 
 // Create new keyword button.
 echo $OUTPUT->single_button(
-    new moodle_url('/auth/disguise/new_keyword.php'),
-    get_string('new_keyword', 'auth_disguise'),
+    new moodle_url('/auth/disguise/new_item.php', ['keyword' => $keyword]),
+    get_string('new_item', 'auth_disguise'),
     'get'
 );
 
 // Get the list of keywords.
 $output = $PAGE->get_renderer('auth_disguise');
-$records = disguise_keyword::get_keyword_records();
-$keywords = new keyword_collection($records);
+
+$records = disguise_keyword::get_item_records_from_keyword($keyword);
+$items = new item_collection($records);
 $totalcount = count($records);
 
-$keywords->sort       = $sortby;
-$keywords->dir        = $sorthow;
-$keywords->page       = $page;
-$keywords->totalcount = $totalcount;
+$items->sort       = $sortby;
+$items->dir        = $sorthow;
+$items->page       = $page;
+$items->totalcount = $totalcount;
 
-echo $output->render($keywords);
+echo $output->render($items);
 
 echo $OUTPUT->footer();

@@ -22,7 +22,7 @@ require_login();
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_pagelayout('admin');
-$PAGE->set_url('/auth/disguise/newkeyword.php');
+$PAGE->set_url('/auth/disguise/new_keyword.php');
 $PAGE->set_heading(get_string('new_keyword', 'auth_disguise'));
 $PAGE->set_title(get_string('new_keyword', 'auth_disguise'));
 

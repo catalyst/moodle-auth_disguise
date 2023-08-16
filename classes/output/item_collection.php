@@ -29,10 +29,10 @@ use renderable;
  * @copyright  2023 Catalyst IT {@link https://catalyst-au.net}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class keyword_collection implements renderable {
+class item_collection implements renderable {
 
     /** @var string how are the data sorted */
-    public $sort = 'keyword';
+    public $sort = 'name';
 
     /** @var string how are the data sorted */
     public $dir = 'ASC';
@@ -41,20 +41,20 @@ class keyword_collection implements renderable {
     public $page = 0;
 
     /** @var int number of keywords to display per page */
-    public $perpage = AUTH_DISGUISE_KEYWORDS_PER_PAGE;
+    public $perpage = AUTH_DISGUISE_KEYWORD_ITEMS_PER_PAGE;
 
     /** @var int the total number of keywords to display */
     public $totalcount = null;
 
     /** @var array list of keywords */
-    public $keywords = [];
+    public $items = [];
 
     /**
      * Initializes the list of keywords to display
      *
-     * @param array $keywords keywords to render
+     * @param array $items items to render
      */
-    public function __construct($keywords) {
-        $this->keywords = $keywords;
+    public function __construct($items) {
+        $this->items = $items;
     }
 }
