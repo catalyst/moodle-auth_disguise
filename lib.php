@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use auth_disguise\manager\disguise;
+use auth_disguise\manager\disguise_context;
 
 // Constants for user disguise modes.
 define('AUTH_DISGUISE_MODE_DISABLED', 0);
@@ -128,6 +129,13 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
     $context = context_course::instance($course->id);
     $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
     $mform->setDefault('disguises_mode', $defaultmode);
+
+    // Naming set text box.
+    $mform->addElement('text', 'naming_set', get_string('naming_set', 'auth_disguise'));
+    $mform->setType('naming_set', PARAM_ALPHANUM);
+    // Set default.
+    $namingset = disguise_context::get_naming_set_for_context($context->id);
+    $mform->setDefault('naming_set', $namingset->naming ?? '');
 }
 
 /**
@@ -187,8 +195,6 @@ function auth_disguise_coursemodule_edit_post_actions($data, $course) {
  * https://github.com/moodle/moodle/blob/master/course/modlib.php
  */
 function auth_disguise_course_edit_post_actions($data, $oldcourse) {
-    global $DB;
-
     // If disguise is not enabled, abort.
     if (!disguise::is_disguise_enabled()) {
         return $data;
@@ -196,23 +202,17 @@ function auth_disguise_course_edit_post_actions($data, $oldcourse) {
 
     // Add or update disguise mode for course and context.
     $context = context_course::instance($data->id);
-    $dbparams = ['contextid' => $context->id];
-    $fields = '*';
-    if (!$dcmode = $DB->get_record('auth_disguise_ctx_mode', $dbparams, $fields)) {
-        $insert = new \stdClass();
-       	$insert->contextid = $context->id;
-        $insert->disguises_mode = $data->disguises_mode;
-        $DB->insert_record('auth_disguise_ctx_mode', $insert);
-        // DEBUG: Remove this later.
-        \core\notification::add('Disguise mode added.', \core\notification::INFO);
+    if (!disguise_context::disguise_mode_exists($context->id)) {
+        // Add disguise mode for course.
+        disguise_context::insert_disguise_context_mode($context->id, $data->disguises_mode);
     } else {
-        if ($dcmode->disguises_mode != $data->disguises_mode) {
-            $dcmode->disguises_mode = $data->disguises_mode;
-            $DB->update_record('auth_disguise_ctx_mode', $dcmode);
-            // DEBUG: Remove this later.
-            \core\notification::add('Disguise mode updated.', \core\notification::INFO);
-        }
+        // Update disguise mode for course.
+        disguise_context::update_disguise_context_mode($context->id, $data->disguises_mode);
     }
+
+    // Save Naming Sets.
+    disguise_context::save_naming_set_for_context($context->id, $data->naming_set);
+
     return $data;
 }
 

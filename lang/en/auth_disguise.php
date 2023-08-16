@@ -68,3 +68,5 @@ $string['item_page'] = 'Manage items';
 $string['new_item'] = 'New item';
 $string['item'] = 'Item';
 
+// Disguise set
+$string['naming_set'] = 'Disguise set';

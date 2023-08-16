@@ -49,12 +49,15 @@
     <TABLE NAME="auth_disguise_naming_set" COMMENT="Rule for create disguise name">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="naming" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="naming" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="max" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Current number of disguises whose names follow this naming"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="naming" UNIQUE="true" FIELDS="naming"/>
+      </INDEXES>
     </TABLE>
     <TABLE NAME="auth_disguise_naming_context" COMMENT="Show which naming is applied to a context">
       <FIELDS>
