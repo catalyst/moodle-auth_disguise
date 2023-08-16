@@ -22,12 +22,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use auth_disguise\manager\disguise_keyword;
+use auth_disguise\output\keyword_collection;
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 // Setup page
 defined('MOODLE_INTERNAL') || die();
 admin_externalpage_setup('auth_disguise_keyword');
+
+require_admin();
 
 $sortby     = optional_param('sort', 'name', PARAM_ALPHA);
 $sorthow    = optional_param('dir', 'ASC', PARAM_ALPHA);
@@ -49,9 +54,17 @@ if ($page < 0) {
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('keyword_page', 'auth_disguise'));
 
+// Create new keyword button.
+echo $OUTPUT->single_button(
+    new moodle_url('/auth/disguise/newkeyword.php'),
+    get_string('new_keyword', 'auth_disguise'),
+    'get'
+);
+
+// Get the list of keywords.
 $output = $PAGE->get_renderer('auth_disguise');
-$records = \auth_disguise\manager\disguise_keyword::get_keyword_records();
-$keywords = new \auth_disguise\output\keyword_collection($records);
+$records = disguise_keyword::get_keyword_records();
+$keywords = new keyword_collection($records);
 $totalcount = count($records);
 
 $keywords->sort       = $sortby;

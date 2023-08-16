@@ -29,7 +29,15 @@ defined('MOODLE_INTERNAL') || die();
  */
 class disguise_keyword {
 
-    public static function create_keyword($keyword, $items) {
+    public static function create_keyword($keyword) {
+        global $DB;
+        $record = new \stdClass();
+        $record->keyword = $keyword;
+        $id = $DB->insert_record('auth_disguise_naming_keyword', $record);
+        return $id;
+    }
+
+    public static function create_keyword_with_items($keyword, $items) {
         global $DB;
 
         $record = new \stdClass();
@@ -76,7 +84,7 @@ class disguise_keyword {
         $items = [
             "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "grey", "gray"
         ];
-        self::create_keyword($keyword, $items);
+        self::create_keyword_with_items($keyword, $items);
     }
 
     // Generate items for animal keyword
@@ -88,7 +96,7 @@ class disguise_keyword {
             "panther", "lynx", "bobcat", "ocelot", "caracal",
             "serval", "puma", "snow leopard", "clouded leopard"
         ];
-        self::create_keyword($keyword, $items);
+        self::create_keyword_with_items($keyword, $items);
     }
 
     // Generate items for fruit keyword
@@ -101,7 +109,7 @@ class disguise_keyword {
             "lime", "lemon", "grapefruit", "apricot", "avocado", "fig",
             "guava", "lychee", "nectarine", "olive", "pomegranate", "tangerine"
         ];
-        self::create_keyword($keyword, $items);
+        self::create_keyword_with_items($keyword, $items);
     }
 
     // Generate items for country keyword
@@ -110,7 +118,7 @@ class disguise_keyword {
         $items = ['Australia', 'Canada', 'China', 'France', 'Germany', 'India', 'Indonesia', 'Italy', 'Japan', 'Mexico',
             'Russia', 'South Korea', 'Spain', 'Turkey', 'United Kingdom', 'United States'
         ];
-        self::create_keyword($keyword, $items);
+        self::create_keyword_with_items($keyword, $items);
     }
 
     // Build name from keywords

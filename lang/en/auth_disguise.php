@@ -53,7 +53,12 @@ $string['switch_id_warning'] = 'You are requesting access to, or leaving, a page
 $string['continue_with_current_id'] = 'Continue with current ID';
 $string['switch_to_disguise_id'] = 'Switch to disguise ID';
 
+// Keyword management strings.
 $string['keyword_page'] = 'Manage keywords';
+$string['keyword'] = 'Keyword';
+$string['items'] = 'Items';
+$string['items_help'] = 'List of comma separated items '.
 $string['keywords'] = 'Keywords';
+$string['new_keyword'] = 'New keyword';
 $string['count'] = 'Number of items';
 $string['action'] = 'Action';
