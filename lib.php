@@ -57,11 +57,6 @@ define('AUTH_DISGUISE_KEYWORD_ITEMS_PER_PAGE', 100);
  */
 function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
 
-    $module = $formwrapper->get_coursemodule();
-    if (empty($module->id)) {
-        return;
-    }
-
     // If disguise is not enabled, abort.
     if (!disguise::is_disguise_enabled()) {
         return;
@@ -85,8 +80,13 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
         $mform->setType('disguises_mode', PARAM_RAW);
 
         // Default mode.
-        $context = context_module::instance($module->id);
-        $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
+        $module = $formwrapper->get_coursemodule();
+        if (!empty($module->id)) {
+            $context = context_module::instance($module->id);
+            $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
+        } else {
+            $defaultmode = 0;
+        }
         $mform->setDefault('disguises_mode', $defaultmode);
     }
 }
@@ -101,13 +101,6 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
  */
 function auth_disguise_course_standard_elements($formwrapper, $mform) {
     global $DB;
-
-    // Return if we are creating new course.
-    // TODO: Include this setting for new course.
-    $course = $formwrapper->get_course();
-    if (empty($course->id)) {
-        return;
-    }
 
     // If disguise is not enabled, abort.
     if (!disguise::is_disguise_enabled()) {
@@ -125,17 +118,29 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
     $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_course', 'auth_disguise'), $choices);
     $mform->setType('disguises_mode', PARAM_RAW);
 
+    $course = $formwrapper->get_course();
+    if (!empty($course->id)) {
+        $context = context_course::instance($course->id);
+        $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
+    } else {
+        $defaultmode = 0;
+    }
+
     // Default mode.
-    $context = context_course::instance($course->id);
-    $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
     $mform->setDefault('disguises_mode', $defaultmode);
 
     // Naming set text box.
     $mform->addElement('text', 'naming_set', get_string('naming_set', 'auth_disguise'));
     $mform->setType('naming_set', PARAM_ALPHANUM);
+
     // Set default.
-    $namingset = disguise_context::get_naming_set_for_context($context->id);
-    $mform->setDefault('naming_set', $namingset->naming ?? '');
+    if ($context) {
+        $namingset = disguise_context::get_naming_set_for_context($context->id);
+        $defaultnaming = $namingset->naming ?? '';
+    } else {
+        $defaultnaming = '';
+    }
+    $mform->setDefault('naming_set', $defaultnaming);
 }
 
 /**
