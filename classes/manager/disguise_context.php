@@ -60,11 +60,9 @@ class disguise_context {
     // Update disguise mode.
     public static function update_disguise_context_mode($contextid, $mode) {
         global $DB;
-        $record = new \stdClass();
-        $record->id = $contextid;
-        $record->disguises_mode = $mode;
-
-        return $DB->update_record('auth_disguise_ctx_mode', $record);
+        // Update field disguises_mode.
+        return $DB->set_field('auth_disguise_ctx_mode', 'disguises_mode', $mode,
+            ['contextid' => $contextid]);
     }
 
     // Check if there is same naming set
@@ -96,7 +94,7 @@ class disguise_context {
         }
 
         // Check if naming set exists for context
-        $contextnamingset = self::get_naming_set_for_context($contextid);
+        $contextnamingset = self::get_context_naming_set($contextid);
 
         // Insert if there is no naming set for context
         if (!$contextnamingset) {
@@ -108,14 +106,17 @@ class disguise_context {
             $contextnamingset->namingsetid = $namingsetid;
             return $DB->update_record('auth_disguise_naming_context', $contextnamingset);
         }
+    }
 
-
+    public static function get_context_naming_set($contextid) {
+        global $DB;
+        return $DB->get_record('auth_disguise_naming_context', ['contextid' => $contextid]);;
     }
 
     // Get naming set for context
     public static function get_naming_set_for_context($contextid) {
         global $DB;
-        $contextnamingset = $DB->get_record('auth_disguise_naming_context', ['contextid' => $contextid]);
+        $contextnamingset = self::get_context_naming_set($contextid);
         if ($contextnamingset) {
             return $DB->get_record('auth_disguise_naming_set', ['id' => $contextnamingset->namingsetid]);
         } else {

@@ -70,3 +70,4 @@ $string['item'] = 'Item';
 
 // Disguise set
 $string['naming_set'] = 'Disguise set';
+$string['no_naming_set'] = 'Please select a keyword to build naming set';

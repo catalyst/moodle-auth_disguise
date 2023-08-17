@@ -129,10 +129,20 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
     // Default mode.
     $mform->setDefault('disguises_mode', $defaultmode);
 
-    // Naming set text box.
-    $mform->addElement('text', 'naming_set', get_string('naming_set', 'auth_disguise'));
-    $mform->setType('naming_set', PARAM_ALPHANUM);
+    // Naming set.
+    $keywordsrecords = \auth_disguise\manager\disguise_keyword::get_keyword_records();
+    // List form keyword from keyword records.
+    $keywords = [];
+    foreach ($keywordsrecords as $record) {
+        $keywords[$record->id] = $record->keyword;
+    }
 
+    $options = array(
+        'multiple' => true,
+        'noselectionstring' => get_string('no_naming_set', 'auth_disguise'),
+    );
+    $mform->addElement('autocomplete', 'naming_set', get_string('naming_set', 'auth_disguise'),
+        $keywords, $options);
     // Set default.
     if ($context) {
         $namingset = disguise_context::get_naming_set_for_context($context->id);
@@ -216,7 +226,9 @@ function auth_disguise_course_edit_post_actions($data, $oldcourse) {
     }
 
     // Save Naming Sets.
-    disguise_context::save_naming_set_for_context($context->id, $data->naming_set);
+    // Convert naming set array to string.
+    $namingset = implode(',', $data->naming_set);
+    disguise_context::save_naming_set_for_context($context->id, $namingset);
 
     return $data;
 }
