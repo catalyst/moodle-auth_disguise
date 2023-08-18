@@ -28,11 +28,21 @@ use auth_disguise\manager\disguise;
 
 redirect_if_major_upgrade_required();
 
-require_login();
+
 
 $returnurl = optional_param('returnurl', "", PARAM_LOCALURL);
 $contextid = optional_param('contextid', 0, PARAM_INT);
 $switchidentity = optional_param('switchidentity', 0, PARAM_INT);
+
+// Set page url/
+$PAGE->set_url('/auth/disguise/prompt.php');
+
+// Context/
+$context = context::instance_by_id($contextid);
+$PAGE->set_context($context);
+
+// Check if $USER is logged in.
+isloggedin() || redirect($CFG->wwwroot . '/login/index.php');
 
 // Not Switch identity, so just continue.
 if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {

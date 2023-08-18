@@ -37,10 +37,36 @@ class disguise {
         return true;
     }
 
+    public static function is_page_type_supported($page) {
+        // List of supported page types.
+        $supportedpagetypes = [
+            'site-',
+            'course-',
+            'mod-',
+        ];
+
+        // Check if the page type is supported.
+        foreach ($supportedpagetypes as $pagetype) {
+            if (strpos($page->pagetype, $pagetype) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static function get_disguise_mode_for_context(int $contextid) {
         global $DB;
         $params = ['contextid' => $contextid];
         return $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $params);
+    }
+
+    // Check if disguise is allowed for subcontext.
+    public static function is_disguise_allowed_for_subcontext(int $coursecontextid) {
+        $coursecontext = disguise_context::get_course_context($coursecontextid);
+        $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
+        if ($disguisemode !== AUTH_DISGUISE_MODE_DISABLED) {
+            return true;
+        }
     }
 
     public static function is_disguise_enabled_for_context(int $contextid) {
@@ -51,8 +77,21 @@ class disguise {
         // Check if the disguise is applied everywhere in the course.
         $coursecontext = disguise_context::get_course_context($contextid);
         $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
-        if ($disguisemode == AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
-            return true;
+
+        // Course context.
+        if ($contextid === $coursecontext->id) {
+            if ($disguisemode == AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        // Module context.
+
+        // Disabled if the course is not set to allow disguise.
+        if ($disguisemode == AUTH_DISGUISE_MODE_DISABLED) {
+            return false;
         }
 
         // Check if disguise is enabled for this context.

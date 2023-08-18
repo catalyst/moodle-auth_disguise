@@ -62,6 +62,13 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
         return;
     }
 
+    // TODO: Do not process if the disguise is disabled at the course level.
+    $course = $formwrapper->get_course();
+    $context = context_course::instance($course->id);
+    if (!disguise::is_disguise_allowed_for_subcontext($context->id)) {
+        return;
+    }
+
     // Add form field (and any existing data) for User Disguises activity mode.
     $modulename = $formwrapper->get_current()->modulename;
 
@@ -265,6 +272,11 @@ function auth_disguise_after_config() {
 function auth_disguise_after_require_login($courseorid = null, $autologinguest = null, $cm = null,
                                            $setwantsurltome = null, $preventredirect = null) {
     global $USER, $PAGE;
+
+    // The 'require login' may be called by other callbacks and they are in different context, so we need to exclude them.
+    if (!disguise::is_page_type_supported($PAGE)) {
+        return;
+    }
 
     // Do not process if it is not under a course context (or the one below course context)
     if (empty($courseorid)) {
