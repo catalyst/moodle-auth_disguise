@@ -17,6 +17,7 @@
 namespace auth_disguise\manager;
 
 require_once($CFG->dirroot . '/auth/disguise/lib.php');
+require_once($CFG->dirroot . '/lib/datalib.php');
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -127,9 +128,17 @@ class disguise {
             return false;
         }
 
-
         // Disabled for site admin.
         if (is_siteadmin($user->id)) {
+            return false;
+        }
+
+        $coursecontext = disguise_context::get_course_context($contextid);
+        $course = get_course($coursecontext->instanceid);
+        $courseinlist = new \core_course_list_element($course);
+        $coursecontacts = $courseinlist->get_course_contacts();
+        // Check if user is a course contact.
+        if (array_key_exists($userid, $coursecontacts)) {
             return false;
         }
 
