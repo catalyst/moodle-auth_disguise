@@ -129,6 +129,9 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
     // Default mode.
     $mform->setDefault('disguises_mode', $defaultmode);
 
+    // Disabled naming set for now.
+    return;
+
     // Naming set.
     $keywordsrecords = \auth_disguise\manager\disguise_keyword::get_keyword_records();
     // List form keyword from keyword records.
@@ -224,6 +227,9 @@ function auth_disguise_course_edit_post_actions($data, $oldcourse) {
         // Update disguise mode for course.
         disguise_context::update_disguise_context_mode($context->id, $data->disguises_mode);
     }
+
+    // Disabled naming set for now.
+    return $data;
 
     // Save Naming Sets.
     // Convert naming set array to string.

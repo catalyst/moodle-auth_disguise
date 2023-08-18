@@ -54,11 +54,11 @@ if ($hassiteconfig) {
     $settings = null;
 
     // External admin page to define keywords.
-    $ADMIN->add('auth_disguise',
-        new admin_externalpage(
-            'auth_disguise_keyword',
-            get_string('keyword_page', 'auth_disguise'),
-            new moodle_url($CFG->wwwroot . '/auth/disguise/keyword.php')
-        )
-    );
+//    $ADMIN->add('auth_disguise',
+//        new admin_externalpage(
+//            'auth_disguise_keyword',
+//            get_string('keyword_page', 'auth_disguise'),
+//            new moodle_url($CFG->wwwroot . '/auth/disguise/keyword.php')
+//        )
+//    );
 }
