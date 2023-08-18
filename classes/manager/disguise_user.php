@@ -115,12 +115,16 @@ class disguise_user {
 
     public static function create_disguise($contextid) {
         global $DB, $CFG;
+        // Generate number for last name
+        // Random 10 digit number.
+        $number = rand(1, 1000000);
+        // Convert number to hex.
+        $hex = dechex($number);
 
         // Create a new disguise.
         $user = new \stdClass();
-
-        $user->firstname = disguise_keyword::build_name(['color']);
-        $user->lastname = disguise_keyword::build_name(['animal']);
+        $user->firstname = "Disguise User";
+        $user->lastname = $hex;
         $user->username = sha1(time() . '_' . $contextid);
         $email = $user->username . "@example.com";
         $email = \core_user::clean_field($email, 'email');
