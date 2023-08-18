@@ -49,9 +49,13 @@ $string['module_mode_disabled'] = 'Disabled - No user disguises permitted in thi
 $string['module_mode_peersafe'] = 'Peer-Safe - Students in this activity appear disguised to other students.';
 $string['module_mode_instructorsafe'] = 'Instructor-Safe - Students in this activity appear disguised to students/instructors.';
 
-$string['switch_id_warning'] = 'You are requesting access to, or leaving, a page where user disguises are enabled.';
+// Switch ID
+$string['switch_to_disguise_id_warning'] = 'You are requesting access to a page where user disguises are enabled.';
+$string['switch_to_real_id_warning'] = 'You are requesting access to a page where user disguises are disabled.';
 $string['continue_with_current_id'] = 'Continue with current ID';
 $string['switch_to_disguise_id'] = 'Switch to disguise ID';
+$string['switch_to_real_id'] = 'Switch to real ID';
+$string['go_back_to_previous_page'] = 'Go back to previous page';
 
 // Keyword management strings.
 $string['keyword_page'] = 'Manage keywords';

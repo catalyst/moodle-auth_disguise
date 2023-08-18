@@ -42,6 +42,8 @@ define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', 201);
 // Switch ID.
 define('AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID', 1);
 define('AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID', 2);
+define('AUTH_DISGUISE_GO_BACK_TO_PREVIOUS_PAGE', 3);
+define('AUTH_DISGUISE_SWITCH_TO_REAL_ID', 4);
 
 // Keywords per page.
 define('AUTH_DISGUISE_KEYWORDS_PER_PAGE', 10);
@@ -298,7 +300,7 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
     }
 
     // Back to real user if required.
-    disguise::back_to_real_user_if_required($context->id);
+    disguise::prompt_back_to_real_user_if_required($context->id);
 
     // Check if disguise is enabled for this user.
     if (!disguise::is_disguise_enabled_for_user($context->id, $USER->id)) {
@@ -306,10 +308,6 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
     }
 
     // Show a prompt to the user if they are not already disguised.
-    $url = new moodle_url('/auth/disguise/prompt.php', [
-        'returnurl' => $PAGE->url->out(),
-        'contextid' => $context->id,
-    ]);
-    redirect($url);
+    disguise::prompt_to_disguise($context->id);
 
 }

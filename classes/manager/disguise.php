@@ -166,8 +166,24 @@ class disguise {
         disguise_enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
     }
 
-    public static function back_to_real_user_if_required($contextid) {
+    public static function prompt_to_disguise($contextid) {
+        global $PAGE;
+        $url = new \moodle_url('/auth/disguise/prompt_to_disguise.php', [
+            'returnurl' => $PAGE->url->out(),
+            'contextid' => $contextid,
+        ]);
+        redirect($url);
+    }
+
+    public static function prompt_back_to_real_user_if_required($contextid) {
+        global $PAGE;
+
+        // Check if user is disguised.
         if (!isset($_SESSION['USERINDISGUISE']) || !isset($_SESSION['DISGUISECONTEXT'])) {
+            return;
+        }
+
+        if ($contextid== $_SESSION['DISGUISECONTEXT']) {
             return;
         }
 
@@ -178,6 +194,19 @@ class disguise {
             return;
         }
 
+        // Show a prompt to the user if they are not already disguised.
+        // Get referer page
+        $referer = clean_param($_SERVER['HTTP_REFERER'], PARAM_URL);
+        $url = new \moodle_url('/auth/disguise/prompt_to_real_id.php', [
+            'returnurl' => $referer,
+            'nexturl' => $PAGE->url->out(),
+            'contextid' => $contextid,
+        ]);
+        redirect($url);
+
+    }
+
+    public static function back_to_real_user($contextid) {
         // Go back to real user if the context change.
         // TODO: Check if the context is a child of the disguise context.
         if ($contextid != $_SESSION['DISGUISECONTEXT']) {
@@ -185,6 +214,7 @@ class disguise {
             \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
             unset($_SESSION['USERINDISGUISE']);
             unset($_SESSION['DISGUISESESSION']);
+            unset($_SESSION['DISGUISECONTEXT']);
         }
     }
 
