@@ -95,7 +95,16 @@ class disguise_user {
 
         // Return the disguise user.
         if ($disuisemap) {
-            return $DB->get_record('user', ['id' => $disuisemap->disguiseid]);
+            $disguise = $DB->get_record('user', ['id' => $disuisemap->disguiseid]);
+            if ($disguise) {
+                return $disguise;
+            } else {
+                // Remove the mapping if the disguise user is not found.
+                $DB->delete_records('auth_disguise_user_map', [
+                    'contextid' => $contextid,
+                    'userid' => $realuserid
+                ]);
+            }
         } else {
             return null;
         }
