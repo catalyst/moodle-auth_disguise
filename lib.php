@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 use auth_disguise\manager\disguise;
 use auth_disguise\manager\disguise_context;
+use auth_disguise\manager\disguise_enrol;
 
 // Constants for user disguise modes.
 define('AUTH_DISGUISE_MODE_DISABLED', 0);
@@ -235,6 +236,13 @@ function auth_disguise_course_edit_post_actions($data, $oldcourse) {
     } else {
         // Update disguise mode for course.
         disguise_context::update_disguise_context_mode($context->id, $data->disguises_mode);
+    }
+
+    // Add enrolment instance for course.
+    if ($data->disguises_mode != AUTH_DISGUISE_MODE_DISABLED) {
+        disguise_enrol::create_enrol_disguise_instance($context->id);
+    } else {
+        disguise_enrol::disable_enrol_disguise_instance($context->id);
     }
 
     // Disabled naming set for now.
