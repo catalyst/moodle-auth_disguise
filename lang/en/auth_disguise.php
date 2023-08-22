@@ -24,7 +24,6 @@
 
 $string['auth_disguisedescription'] = 'Auxiliary plugin that allows users with Moodle accounts to have disguises where permitted.';
 $string['pluginname'] = 'User Disguises';
-$string['privacy:metadata'] = 'The Disguised user authentication plugin needs its privacy metadata reviewed.';
 
 $string['title'] = 'User Disguises';
 
@@ -49,7 +48,14 @@ $string['module_mode_disabled'] = 'Disabled - No user disguises permitted in thi
 $string['module_mode_peersafe'] = 'Peer-Safe - Students in this activity appear disguised to other students.';
 $string['module_mode_instructorsafe'] = 'Instructor-Safe - Students in this activity appear disguised to students/instructors.';
 
-// Switch ID
+// Privacy Provider.
+$string['privacy:metadata:database:auth_disguise_user_map'] = 'Mapping between users and disguise';
+$string['privacy:metadata:database:auth_disguise_user_map:userid'] = 'User ID';
+$string['privacy:metadata:database:auth_disguise_user_map:disguiseid'] = 'ID of disguise user';
+$string['privacy:metadata:database:auth_disguise_unmapped_disg'] = 'Un-allocated disguise users';
+$string['privacy:metadata:database:auth_disguise_unmapped_disg:disguiseid'] = 'ID of disguise user';
+
+// Switch ID.
 $string['switch_to_disguise_id_warning'] = 'You are requesting access to a page where user disguises are enabled.';
 $string['switch_to_real_id_warning'] = 'You are requesting access to a page where user disguises are disabled.';
 $string['continue_with_current_id'] = 'Continue with current ID';
@@ -72,6 +78,6 @@ $string['item_page'] = 'Manage items';
 $string['new_item'] = 'New item';
 $string['item'] = 'Item';
 
-// Disguise set
+// Disguise set.
 $string['naming_set'] = 'Disguise set';
 $string['no_naming_set'] = 'Please select a keyword to build naming set';
