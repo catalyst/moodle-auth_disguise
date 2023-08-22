@@ -31,8 +31,6 @@ require_once($CFG->libdir.'/authlib.php');
  * Plugin for Disguised users.
  */
 class auth_plugin_disguise extends auth_plugin_base {
-
-
     /**
      * Constructor.
      */
@@ -54,6 +52,7 @@ class auth_plugin_disguise extends auth_plugin_base {
     /**
      * Do not allow any login.
      *
+     * @return bool
      */
     function user_login($username, $password) {
         return false;
@@ -61,6 +60,8 @@ class auth_plugin_disguise extends auth_plugin_base {
 
     /**
      * No password updates.
+     *
+     * @return bool
      */
     function user_update_password($user, $newpassword) {
         return false;
@@ -68,6 +69,8 @@ class auth_plugin_disguise extends auth_plugin_base {
 
     /**
      * No passwords should be stored.
+     *
+     * @return bool
      */
     function prevent_local_passwords() {
         return true;
@@ -94,6 +97,8 @@ class auth_plugin_disguise extends auth_plugin_base {
 
     /**
      * No password resetting.
+     *
+     * @return bool
      */
     function can_reset_password() {
         return false;
@@ -102,12 +107,10 @@ class auth_plugin_disguise extends auth_plugin_base {
     /**
      * Plugin should not be manually set, but managed elsewhere.
      *
-     * Temporarily set to true for UI during development. TODO: Disable.
-     *
      * @return bool
      */
     function can_be_manually_set() {
-        return true;
+        return false;
     }
 
     /**
@@ -136,5 +139,3 @@ class auth_plugin_disguise extends auth_plugin_base {
         ];
     }
 }
-
-
