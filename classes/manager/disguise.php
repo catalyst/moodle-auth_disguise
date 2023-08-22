@@ -30,12 +30,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 class disguise {
     public static function is_disguise_enabled() {
-        // Check plugin config.
-        if (!get_config('auth_disguise','feature_status_site')) {
-            return false;
-        }
-
-        return true;
+        global $CFG;
+        return !empty($CFG->userdisguise);
     }
 
     public static function is_page_type_supported($page) {

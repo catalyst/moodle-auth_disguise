@@ -92,4 +92,6 @@ class provider implements
     public static function delete_data_for_users(approved_userlist $userlist) {
         // None of the table data should be deleted.
     }
+
+
 }

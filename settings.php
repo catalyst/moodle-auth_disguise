@@ -24,21 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($hassiteconfig) {
+if ($hassiteconfig && \auth_disguise\manager\disguise::is_disguise_enabled()) {
 
     // Display plugin description.
     $settings->add(new admin_setting_heading('auth_disguise/pluginname', '',
         new lang_string('auth_disguisedescription', 'auth_disguise')));
-
-    // Enable/Disable disguise functionality site-wide (EXPERIMENTAL).
-    $feature_status_site_options = array(
-        new lang_string('disabled', 'auth_disguise'),
-        new lang_string('enabled', 'auth_disguise'),
-    );
-
-    $settings->add(new admin_setting_configselect('auth_disguise/feature_status_site',
-        new lang_string('feature_status_site', 'auth_disguise'),
-        new lang_string('feature_status_site_desc', 'auth_disguise'), 0, $feature_status_site_options));
 
     // Display locking / mapping of profile fields.
     $authplugin = get_auth_plugin('disguise');
@@ -61,4 +51,15 @@ if ($hassiteconfig) {
 //            new moodle_url($CFG->wwwroot . '/auth/disguise/keyword.php')
 //        )
 //    );
+
+}
+
+if ($hassiteconfig) {
+    // Experimental settings for user disguise.
+    $setting = new admin_setting_configcheckbox('userdisguise',
+        new lang_string('pluginname', 'auth_disguise'),
+        new lang_string('feature_status_site_desc', 'auth_disguise'),
+        0);
+
+    $ADMIN->locate('experimentalsettings')->add($setting);
 }

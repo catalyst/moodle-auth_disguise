@@ -30,7 +30,6 @@ $string['title'] = 'User Disguises';
 $string['disabled'] = 'Disabled';
 $string['enabled'] = 'Enabled';
 
-$string['feature_status_site'] = 'Feature status (site-wide) [EXPERIMENTAL]';
 $string['feature_status_site_desc'] = 'This determines whether user disguises are enabled for use site-wide. It controls the display of settings regarding modification of user disguise feature settings throughout the site.';
 
 // Course disguise context modes - Currently only disabled and modules_only are valid.
