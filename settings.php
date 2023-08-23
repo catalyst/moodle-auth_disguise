@@ -35,9 +35,6 @@ if ($hassiteconfig && \auth_disguise\manager\disguise::is_disguise_enabled()) {
     display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields,
             get_string('auth_fieldlocks_help', 'auth'), false, false);
 
-    // TODO: Check if the plugin is enabled.
-
-
     $ADMIN->add('authsettings', new admin_category('auth_disguise', get_string('pluginname', 'auth_disguise')));
     $ADMIN->add('auth_disguise', $settings);
     // To prevent the settings from being displayed twice.
@@ -61,5 +58,9 @@ if ($hassiteconfig) {
         new lang_string('feature_status_site_desc', 'auth_disguise'),
         0);
 
-    $ADMIN->locate('experimentalsettings')->add($setting);
+    // Find the experimental settings category.
+    $category = $ADMIN->locate('experimentalsettings');
+    if ($category) {
+        $category->add($setting);
+    }
 }

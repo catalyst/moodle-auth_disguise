@@ -317,5 +317,25 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
 
     // Show a prompt to the user if they are not already disguised.
     disguise::prompt_to_disguise($context->id);
+}
 
+function auth_disguise_after_config() {
+    $settingsection = optional_param('section', '', PARAM_ALPHAEXT);
+
+    // GET requests only.
+    if (isset($_SERVER['REQUEST_METHOD']) && ($_SERVER['REQUEST_METHOD'] !== 'GET')) {
+        return;
+    }
+
+    // Experimental settings page.
+    if ($settingsection !== 'experimentalsettings') {
+        return;
+    }
+
+    // Enable auth disguise and enrol disguise if required.
+    $authclass = \core_plugin_manager::resolve_plugininfo_class('auth');
+    $enrolclass = \core_plugin_manager::resolve_plugininfo_class('enrol');
+
+    $authclass::enable_plugin('disguise', disguise::is_disguise_enabled());
+    $enrolclass::enable_plugin('disguise', disguise::is_disguise_enabled());
 }
