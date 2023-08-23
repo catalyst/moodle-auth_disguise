@@ -58,7 +58,7 @@ class disguise {
     public static function is_page_type_supported(moodle_page $page) {
         // Check if the page type is supported.
         foreach (self::SUPPORTED_PAGE_TYPES as $pagetype) {
-            if (str_contains($page->pagetype, $pagetype)) {
+            if (strpos($page->pagetype, $pagetype) !== false) {
                 return true;
             }
         }
