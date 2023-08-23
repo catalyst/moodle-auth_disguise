@@ -308,7 +308,7 @@ function auth_disguise_after_require_login($courseorid = null, $autologinguest =
     }
 
     // Back to real user if required.
-    disguise::prompt_back_to_real_user_if_required($context->id);
+    disguise::prompt_back_to_real_user($context->id);
 
     // Check if disguise is enabled for this user.
     if (!disguise::is_disguise_enabled_for_user($context->id, $USER->id)) {

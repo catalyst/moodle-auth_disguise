@@ -16,6 +16,8 @@
 
 namespace auth_disguise\manager;
 
+use moodle_page;
+
 require_once($CFG->dirroot . '/auth/disguise/lib.php');
 require_once($CFG->dirroot . '/lib/datalib.php');
 
@@ -29,21 +31,33 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class disguise {
+
+    /** Supported page types */
+    const SUPPORTED_PAGE_TYPES = [
+        'site-',
+        'course-',
+        'mod-',
+    ];
+
+    /**
+     * Check if disguise is enabled.
+     *
+     * @return bool whether disguise is enabled
+     */
     public static function is_disguise_enabled() {
         global $CFG;
         return !empty($CFG->userdisguise);
     }
 
-    public static function is_page_type_supported($page) {
-        // List of supported page types.
-        $supportedpagetypes = [
-            'site-',
-            'course-',
-            'mod-',
-        ];
-
+    /**
+     * Check if the page type is supported.
+     *
+     * @param moodle_page $page page to check
+     * @return bool whether the page type is supported
+     */
+    public static function is_page_type_supported(moodle_page $page) {
         // Check if the page type is supported.
-        foreach ($supportedpagetypes as $pagetype) {
+        foreach (self::SUPPORTED_PAGE_TYPES as $pagetype) {
             if (strpos($page->pagetype, $pagetype) !== false) {
                 return true;
             }
@@ -51,22 +65,42 @@ class disguise {
         return false;
     }
 
-    public static function get_disguise_mode_for_context(int $contextid) {
+    /**
+     * Return the disguise mode for the context.
+     *
+     * @param int $contextid context id
+     * @return int return the disguise mode or false if not found
+     */
+    private static function get_disguise_mode_for_context(int $contextid) {
         global $DB;
         $params = ['contextid' => $contextid];
-        return $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $params);
+        return $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $params) ?? AUTH_DISGUISE_MODE_DISABLED;
     }
 
-    // Check if disguise is allowed for subcontext.
-    public static function is_disguise_allowed_for_subcontext(int $coursecontextid) {
-        $coursecontext = disguise_context::get_course_context($coursecontextid);
-        $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
-        if ($disguisemode !== AUTH_DISGUISE_MODE_DISABLED) {
-            return true;
+    /**
+     * Check if disguise is allowed for its sub contexts.
+     * That is, if parent context has disguise disabled,
+     * then the disguise should also be disabled for its sub contexts.
+     *
+     * @param int $contextid context id
+     * @return bool whether disguise is allowed for sub contexts
+     */
+    public static function is_disguise_allowed_for_subcontext(int $contextid) {
+        $disguisemode = self::get_disguise_mode_for_context($contextid);
+        if ($disguisemode === AUTH_DISGUISE_MODE_DISABLED) {
+            return false;
         }
+        return true;
     }
 
+    /**
+     * Check if disguise is enabled for the context.
+     *
+     * @param int $contextid context id
+     * @return bool whether disguise is enabled for the context
+     */
     public static function is_disguise_enabled_for_context(int $contextid) {
+        // Check if disguise is enabled site wide.
         if (!self::is_disguise_enabled()) {
             return false;
         }
@@ -75,36 +109,52 @@ class disguise {
         $coursecontext = disguise_context::get_course_context($contextid);
         $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
 
-        // Course context.
-        if ($contextid === $coursecontext->id) {
-            if ($disguisemode == AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
+        switch ($disguisemode) {
+            case AUTH_DISGUISE_MODE_COURSE_EVERYWHERE:
                 return true;
-            } else {
+            case AUTH_DISGUISE_MODE_DISABLED:
                 return false;
-            }
         }
-
-        // Module context.
-
-        // Disabled if the course is not set to allow disguise.
-        if ($disguisemode == AUTH_DISGUISE_MODE_DISABLED) {
+        // The disguise mode is set as optional or forced in activities only.
+        // If the current context is course context, then disguise is disabled.
+        if ($contextid === $coursecontext->id) {
             return false;
         }
 
-        // Check if disguise is enabled for this context.
+        // If the context is activity. We will check if it is optional or forced.
+
+        // Force disguise mode for activities.
+        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY) {
+            return true;
+        }
+
+        // Otherwise, it is optional.
+        //Check if disguise is enabled for this activity context.
         $disguisemode = self::get_disguise_mode_for_context($contextid);
-        if ($disguisemode == AUTH_DISGUISE_MODE_DISABLED) {
+        if ($disguisemode === AUTH_DISGUISE_MODE_DISABLED) {
             return false;
         }
 
         return true;
     }
 
+    /**
+     * Check if disguise is enabled for the user in a given context.
+     *
+     * @param int $contextid context id
+     * @param int $userid user id
+     * @return bool whether disguise is enabled for the user
+     */
     public static function is_disguise_enabled_for_user(int $contextid, int $userid) {
         global $SESSION;
 
         // Check if disguise is enabled for this context.
         if (!self::is_disguise_enabled_for_context($contextid)) {
+            return false;
+        }
+
+        // Disabled for site admin.
+        if (is_siteadmin($userid)) {
             return false;
         }
 
@@ -124,24 +174,26 @@ class disguise {
             return false;
         }
 
-        // Disabled for site admin.
-        if (is_siteadmin($user->id)) {
-            return false;
-        }
-
+        // Disabled if user is one of course contacts.
         $coursecontext = disguise_context::get_course_context($contextid);
         $course = get_course($coursecontext->instanceid);
         $courseinlist = new \core_course_list_element($course);
         $coursecontacts = $courseinlist->get_course_contacts();
-        // Check if user is a course contact.
         if (array_key_exists($userid, $coursecontacts)) {
             return false;
         }
 
+        // Otherwise, disguise is enabled for this user.
         return true;
     }
 
-    public static function disguise_user($contextid, $realuserid) {
+    /**
+     * Disguise user for the given context.
+     *
+     * @param int $contextid context id
+     * @param int $realuserid real user id
+     */
+    public static function disguise_user(int $contextid, int $realuserid) {
         // Get disguise.
         $disguise = disguise_user::get_disguise_for_user($contextid, $realuserid);
 
@@ -152,13 +204,14 @@ class disguise {
             return;
         }
 
-        // SESSION.
+        // New session for disguise.
         $_SESSION = array();
         $_SESSION['DISGUISESESSION'] = clone($GLOBALS['SESSION']);
         $GLOBALS['SESSION'] = new \stdClass();
         $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
 
-        // Avoid using REALUSER as it may mess up 'loginas'.
+        // Avoid using 'REALUSER' as it may mess up 'loginas'.
+        // 'USERINDISGUISE' mean real user.
         $_SESSION['USERINDISGUISE'] = clone($GLOBALS['USER']);
         $_SESSION['DISGUISECONTEXT'] = $contextid;
 
@@ -167,11 +220,17 @@ class disguise {
         $disguiseduser->userindisguise = $_SESSION['USERINDISGUISE'];
         \core\session\manager::set_user($disguiseduser);
 
-        // Enrol.
+        // Enrol the disguise.
         disguise_enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
     }
 
-    public static function prompt_to_disguise($contextid) {
+    /**
+     * Create a prompt so that user know that they are accessing a page where disguise is enabled.
+     *
+     * @param int $contextid context id
+     *
+     */
+    public static function prompt_to_disguise(int $contextid) {
         global $PAGE;
         $url = new \moodle_url('/auth/disguise/prompt_to_disguise.php', [
             'returnurl' => $PAGE->url->out(),
@@ -180,15 +239,21 @@ class disguise {
         redirect($url);
     }
 
-    public static function prompt_back_to_real_user_if_required($contextid) {
+    /**
+     * Prompt user to go back to their real id if they are leaving the disguise context.
+     *
+     * @param int $contextid context id
+     */
+    public static function prompt_back_to_real_user(int $contextid) {
         global $PAGE;
 
-        // Check if user is disguised.
+        // Do not show the prompt if user is not in disguise.
         if (!isset($_SESSION['USERINDISGUISE']) || !isset($_SESSION['DISGUISECONTEXT'])) {
             return;
         }
 
-        if ($contextid== $_SESSION['DISGUISECONTEXT']) {
+        // Do not show the prompt if user is already in the disguise context.
+        if ($contextid === $_SESSION['DISGUISECONTEXT']) {
             return;
         }
 
@@ -200,7 +265,7 @@ class disguise {
         }
 
         // Show a prompt to the user if they are not already disguised.
-        // Get referer page
+        // The referer page is used as the return url, if user don't want to go back to their real id.
         $referer = clean_param($_SERVER['HTTP_REFERER'], PARAM_URL);
         $url = new \moodle_url('/auth/disguise/prompt_to_real_id.php', [
             'returnurl' => $referer,
@@ -208,9 +273,13 @@ class disguise {
             'contextid' => $contextid,
         ]);
         redirect($url);
-
     }
 
+    /**
+     * Go back to real user if the context is changed.
+     *
+     * @param int $contextid context id
+     */
     public static function back_to_real_user($contextid) {
         // Go back to real user if the context change.
         // TODO: Check if the context is a child of the disguise context.

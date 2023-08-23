@@ -21,7 +21,7 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Tests for the auth_disguise class.
  *
- * @package enrol_disguise
+ * @package auth_disguise
  * @author  Nathan Nguyen <nathannguyen@catalyst-au.net>
  * @copyright  Catalyst IT
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
