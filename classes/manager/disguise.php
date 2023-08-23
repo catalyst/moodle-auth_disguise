@@ -58,7 +58,7 @@ class disguise {
     public static function is_page_type_supported(moodle_page $page) {
         // Check if the page type is supported.
         foreach (self::SUPPORTED_PAGE_TYPES as $pagetype) {
-            if (strpos($page->pagetype, $pagetype) !== false) {
+            if (str_contains($page->pagetype, $pagetype)) {
                 return true;
             }
         }
@@ -66,12 +66,35 @@ class disguise {
     }
 
     /**
+     * Set the disguise mode for the context.
+     *
+     * @param int $contextid context id
+     * @param string $disguisemode disguise mode
+     */
+    public static function set_disguise_mode_for_context(int $contextid, string $disguisemode) {
+        global $DB;
+        // Check if the context already has a disguise mode.
+        $params = ['contextid' => $contextid];
+        if ($DB->record_exists('auth_disguise_ctx_mode', $params)) {
+            $DB->set_field('auth_disguise_ctx_mode', 'disguises_mode', $disguisemode, $params);
+            return;
+        }
+
+        // Otherwise, insert a new record.
+        $params = [
+            'contextid' => $contextid,
+            'disguises_mode' => $disguisemode,
+        ];
+        $DB->insert_record('auth_disguise_ctx_mode', $params);
+    }
+
+    /**
      * Return the disguise mode for the context.
      *
      * @param int $contextid context id
-     * @return int return the disguise mode or false if not found
+     * @return string return the disguise mode or false if not found
      */
-    private static function get_disguise_mode_for_context(int $contextid) {
+    public static function get_disguise_mode_for_context(int $contextid) {
         global $DB;
         $params = ['contextid' => $contextid];
         return $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', $params) ?? AUTH_DISGUISE_MODE_DISABLED;
@@ -86,11 +109,36 @@ class disguise {
      * @return bool whether disguise is allowed for sub contexts
      */
     public static function is_disguise_allowed_for_subcontext(int $contextid) {
+        // Check if disguise is enabled site wide.
+        if (!self::is_disguise_enabled()) {
+            return false;
+        }
+
         $disguisemode = self::get_disguise_mode_for_context($contextid);
         if ($disguisemode === AUTH_DISGUISE_MODE_DISABLED) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Check if disguise is forced for its sub contexts.
+     *
+     * @param int $contextid context id
+     * @return bool whether disguise is forced for sub contexts
+     */
+    public static function is_disguise_forced_for_subcontext(int $contextid) {
+        // Check if disguise is enabled site wide.
+        if (!self::is_disguise_enabled()) {
+            return false;
+        }
+
+        $disguisemode = self::get_disguise_mode_for_context($contextid);
+        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY ||
+            $disguisemode === AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -102,6 +150,11 @@ class disguise {
     public static function is_disguise_enabled_for_context(int $contextid) {
         // Check if disguise is enabled site wide.
         if (!self::is_disguise_enabled()) {
+            return false;
+        }
+
+        // If the context is ignored, then disguise is disabled.
+        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $contextid) {
             return false;
         }
 
@@ -164,11 +217,6 @@ class disguise {
             return false;
         }
 
-        // If the context is ignored, then disguise is disabled.
-        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $contextid) {
-            return false;
-        }
-
         // Only allow disguise if user is enrolled in the course.
         if (!disguise_enrol::is_enrolled($userid, $contextid)) {
             return false;
@@ -211,17 +259,33 @@ class disguise {
         $_SESSION['SESSION'] =& $GLOBALS['SESSION'];
 
         // Avoid using 'REALUSER' as it may mess up 'loginas'.
-        // 'USERINDISGUISE' mean real user.
-        $_SESSION['USERINDISGUISE'] = clone($GLOBALS['USER']);
+        $realuser = get_complete_user_data('id', $realuserid);
+        $_SESSION['USERINDISGUISE'] = $realuser;
         $_SESSION['DISGUISECONTEXT'] = $contextid;
 
         // Disguise.
         $disguiseduser = get_complete_user_data('id', $disguise->id);
-        $disguiseduser->userindisguise = $_SESSION['USERINDISGUISE'];
         \core\session\manager::set_user($disguiseduser);
 
         // Enrol the disguise.
         disguise_enrol::enrol_disguise($contextid, $realuserid, $disguise->id);
+    }
+
+    /**
+     * Go back to real user if the context is changed.
+     *
+     * @param int $contextid context id
+     */
+    public static function back_to_real_user($contextid) {
+        // Go back to real user if the context change.
+        // TODO: Check if the context is a child of the disguise context.
+        if ($contextid != $_SESSION['DISGUISECONTEXT']) {
+            $_SESSION['SESSION'] = clone($_SESSION['DISGUISESESSION']);
+            \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
+            unset($_SESSION['USERINDISGUISE']);
+            unset($_SESSION['DISGUISESESSION']);
+            unset($_SESSION['DISGUISECONTEXT']);
+        }
     }
 
     /**
@@ -273,23 +337,6 @@ class disguise {
             'contextid' => $contextid,
         ]);
         redirect($url);
-    }
-
-    /**
-     * Go back to real user if the context is changed.
-     *
-     * @param int $contextid context id
-     */
-    public static function back_to_real_user($contextid) {
-        // Go back to real user if the context change.
-        // TODO: Check if the context is a child of the disguise context.
-        if ($contextid != $_SESSION['DISGUISECONTEXT']) {
-            $_SESSION['SESSION'] = clone($_SESSION['DISGUISESESSION']);
-            \core\session\manager::set_user($_SESSION['USERINDISGUISE']);
-            unset($_SESSION['USERINDISGUISE']);
-            unset($_SESSION['DISGUISESESSION']);
-            unset($_SESSION['DISGUISECONTEXT']);
-        }
     }
 
 }

@@ -27,18 +27,19 @@ defined('MOODLE_INTERNAL') || die();
 use auth_disguise\manager\disguise;
 use auth_disguise\manager\disguise_context;
 use auth_disguise\manager\disguise_enrol;
+use auth_disguise\manager\disguise_keyword;
 
 // Constants for user disguise modes.
-define('AUTH_DISGUISE_MODE_DISABLED', 0);
+define('AUTH_DISGUISE_MODE_DISABLED', "0");
 
 // Course modes.
-define('AUTH_DISGUISE_MODE_COURSE_OPTIONAL', 100);
-define('AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY', 101);
-define('AUTH_DISGUISE_MODE_COURSE_EVERYWHERE', 102);
+define('AUTH_DISGUISE_MODE_COURSE_OPTIONAL', "100");
+define('AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY', "101");
+define('AUTH_DISGUISE_MODE_COURSE_EVERYWHERE', "102");
 
 // Course module modes.
-define('AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE', 200);
-define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', 201);
+define('AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE', "200");
+define('AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE', "201");
 
 // Switch ID.
 define('AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID', 1);
@@ -59,15 +60,18 @@ define('AUTH_DISGUISE_KEYWORD_ITEMS_PER_PAGE', 100);
  * @param MoodleQuickForm $mform The actual form object (required to modify the form).
  */
 function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
+    global $DB;
 
     // If disguise is not enabled, abort.
     if (!disguise::is_disguise_enabled()) {
         return;
     }
 
-    // TODO: Do not process if the disguise is disabled at the course level.
+    // Get course context.
     $course = $formwrapper->get_course();
     $context = context_course::instance($course->id);
+
+    // If disguise is allowed for the activities of the course.
     if (!disguise::is_disguise_allowed_for_subcontext($context->id)) {
         return;
     }
@@ -77,7 +81,6 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
 
     // User disguises are currently limited to forum activities only.
     if ($modulename == 'forum') {
-        global $DB;
 
         // Add the options to the form.
         $choices = [
@@ -85,6 +88,12 @@ function auth_disguise_coursemodule_standard_elements($formwrapper, $mform) {
             AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE => get_string('module_mode_peersafe', 'auth_disguise'),
             AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE => get_string('module_mode_instructorsafe', 'auth_disguise'),
         ];
+
+        // If the disguise is forced, remove the disabled option.
+        if (disguise::is_disguise_forced_for_subcontext($context->id)) {
+            unset($choices[AUTH_DISGUISE_MODE_DISABLED]);
+        }
+
         $mform->addElement('header', 'disguises_options', get_string('title', 'auth_disguise'));
         $mform->addElement('select', 'disguises_mode', get_string('disguises_mode_module', 'auth_disguise'), $choices);
         $mform->setType('disguises_mode', PARAM_RAW);
@@ -143,7 +152,7 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
     return;
 
     // Naming set.
-    $keywordsrecords = \auth_disguise\manager\disguise_keyword::get_keyword_records();
+    $keywordsrecords = disguise_keyword::get_keyword_records();
     // List form keyword from keyword records.
     $keywords = [];
     foreach ($keywordsrecords as $record) {
@@ -199,14 +208,10 @@ function auth_disguise_coursemodule_edit_post_actions($data, $course) {
         $insert->contextid = $context->id;
         $insert->disguises_mode = $data->disguises_mode;
         $DB->insert_record('auth_disguise_ctx_mode', $insert);
-        // DEBUG: Remove this later.
-        \core\notification::add('Disguise mode added.', \core\notification::INFO);
     } else {
         if ($dcmode->disguises_mode != $data->disguises_mode) {
             $dcmode->disguises_mode = $data->disguises_mode;
             $DB->update_record('auth_disguise_ctx_mode', $dcmode);
-            // DEBUG: Remove this later.
-            \core\notification::add('Disguise mode updated.', \core\notification::INFO);
         }
     }
     return $data;
