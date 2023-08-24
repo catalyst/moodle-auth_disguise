@@ -29,6 +29,7 @@ use auth_disguise\manager\disguise;
 redirect_if_major_upgrade_required();
 
 $returnurl = optional_param('returnurl', "", PARAM_LOCALURL);
+$nexturl = optional_param('nexturl', "", PARAM_LOCALURL);
 $contextid = optional_param('contextid', 0, PARAM_INT);
 $switchidentity = optional_param('switchidentity', 0, PARAM_INT);
 
@@ -44,14 +45,13 @@ isloggedin() || redirect($CFG->wwwroot . '/login/index.php');
 
 // Not Switch identity, so just continue.
 if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {
-    $SESSION->ignoreddisguisecontext = $contextid;
     redirect($returnurl);
 }
 
 // Switch ID.
 if ($switchidentity == AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID) {
     disguise::disguise_user($contextid, $USER->id);
-    redirect($returnurl);
+    redirect($nexturl);
 }
 
 
@@ -95,7 +95,7 @@ echo $OUTPUT->single_button(
     new moodle_url('/auth/disguise/prompt_to_disguise.php', [
             'contextid' => $contextid,
             'switchidentity' => AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID,
-            'returnurl' => $returnurl
+            'nexturl' => $nexturl
     ]),
     get_string('switch_to_disguise_id', 'auth_disguise'),
     'get'

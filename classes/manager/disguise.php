@@ -296,8 +296,10 @@ class disguise {
      */
     public static function prompt_to_disguise(int $contextid) {
         global $PAGE;
+        $referer = clean_param($_SERVER['HTTP_REFERER'], PARAM_URL);
         $url = new \moodle_url('/auth/disguise/prompt_to_disguise.php', [
-            'returnurl' => $PAGE->url->out(),
+            'returnurl' => $referer,
+            'nexturl' => $PAGE->url->out(),
             'contextid' => $contextid,
         ]);
         redirect($url);
