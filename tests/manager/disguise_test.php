@@ -105,14 +105,14 @@ class disguise_test extends \advanced_testcase {
                 'forcedsubcontexts' => false,
             ],
 
-            // Forced disguise on course activities.
+            // Disguise on course activities.
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
                 'modmode' => AUTH_DISGUISE_MODE_DISABLED,
                 'enabledcoursecontext' => false,
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
-                'forcedsubcontexts' => true,
+                'forcedsubcontexts' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
@@ -120,7 +120,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledcoursecontext' => false,
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
-                'forcedsubcontexts' => true,
+                'forcedsubcontexts' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
@@ -128,7 +128,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledcoursecontext' => false,
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
-                'forcedsubcontexts' => true,
+                'forcedsubcontexts' => false,
             ],
 
             // Disguise everywhere in the course.

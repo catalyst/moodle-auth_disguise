@@ -134,8 +134,7 @@ class disguise {
         }
 
         $disguisemode = self::get_disguise_mode_for_context($contextid);
-        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY ||
-            $disguisemode === AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
+        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
             return true;
         }
         return false;
