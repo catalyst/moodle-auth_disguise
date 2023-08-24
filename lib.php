@@ -142,7 +142,7 @@ function auth_disguise_course_standard_elements($formwrapper, $mform) {
         $context = context_course::instance($course->id);
         $defaultmode = $DB->get_field('auth_disguise_ctx_mode', 'disguises_mode', ['contextid' => $context->id]) ?? 0;
     } else {
-        $defaultmode = 0;
+        $defaultmode = AUTH_DISGUISE_MODE_DISABLED;
     }
 
     // Default mode.
@@ -194,7 +194,7 @@ function auth_disguise_coursemodule_edit_post_actions($data, $course) {
         return $data;
     }
     // if there is no data, then there is nothing to do.
-    if (empty($data->disguises_mode)) {
+    if (!isset($data->disguises_mode)) {
         return $data;
     }
 
