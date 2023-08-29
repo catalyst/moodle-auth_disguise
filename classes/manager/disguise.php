@@ -115,10 +115,7 @@ class disguise {
         }
 
         $disguisemode = self::get_disguise_mode_for_context($contextid);
-        if ($disguisemode === AUTH_DISGUISE_MODE_DISABLED) {
-            return false;
-        }
-        return true;
+        return $disguisemode !== AUTH_DISGUISE_MODE_DISABLED;
     }
 
     /**
@@ -134,10 +131,7 @@ class disguise {
         }
 
         $disguisemode = self::get_disguise_mode_for_context($contextid);
-        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_EVERYWHERE) {
-            return true;
-        }
-        return false;
+        return $disguisemode === AUTH_DISGUISE_MODE_COURSE_EVERYWHERE;
     }
 
     /**
