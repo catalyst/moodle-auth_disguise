@@ -135,6 +135,26 @@ class disguise {
     }
 
     /**
+     * Check if disguise is optional, that is user can choose to disguise or not.
+     *
+     *
+     * @param int $contextid context id
+     * @return bool whether disguise is optional for sub contexts
+     */
+    public static function is_disguise_optional_for_context(int $contextid) {
+        // Check if disguise is enabled site wide.
+        if (!self::is_disguise_enabled()) {
+            return false;
+        }
+
+        // Get course context.
+        $coursecontext = disguise_context::get_course_context($contextid);
+
+        $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
+        return $disguisemode === AUTH_DISGUISE_MODE_COURSE_OPTIONAL;
+    }
+
+    /**
      * Check if disguise is enabled for the context.
      *
      * @param int $contextid context id
