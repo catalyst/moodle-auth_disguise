@@ -155,6 +155,31 @@ class disguise {
     }
 
     /**
+     * Disguise is optional for this context and user to chose not to use disguise
+     *
+     *
+     */
+    public static function ignore_disguise_for_context(int $contextid) {
+        global $SESSION;
+        // Check if disguise is optional for the context.
+        if (self::is_disguise_optional_for_context($contextid)) {
+            $SESSION->ignoreddisguisecontext = $contextid;
+
+        }
+    }
+
+    /**
+     * Check if disguise is ignored for the context.
+     *
+     * @param int $contextid context id
+     * @return bool whether disguise is ignored for the context
+     */
+    public static function is_context_ignored_for_disguise(int $contextid) {
+        global $SESSION;
+        return isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $contextid;
+    }
+
+    /**
      * Check if disguise is enabled for the context.
      *
      * @param int $contextid context id
@@ -167,7 +192,7 @@ class disguise {
         }
 
         // If the context is ignored, then disguise is disabled.
-        if (isset($SESSION->ignoreddisguisecontext) && $SESSION->ignoreddisguisecontext == $contextid) {
+        if (self::is_context_ignored_for_disguise($contextid)) {
             return false;
         }
 
@@ -255,6 +280,11 @@ class disguise {
      * @param int $realuserid real user id
      */
     public static function disguise_user(int $contextid, int $realuserid) {
+        // Sanity check
+        if (!self::is_disguise_enabled_for_user($contextid, $realuserid)) {
+            return;
+        }
+
         // Get disguise.
         $disguise = disguise_user::get_disguise_for_user($contextid, $realuserid);
 
@@ -310,10 +340,15 @@ class disguise {
     public static function prompt_to_disguise(int $contextid) {
         global $PAGE;
         $referer = clean_param($_SERVER['HTTP_REFERER'], PARAM_URL);
+
+        // Check if disguise is optional in this context.
+        $optionaldisguise = self::is_disguise_optional_for_context($contextid);
+
         $url = new \moodle_url('/auth/disguise/prompt_to_disguise.php', [
-            'returnurl' => $referer,
+            'returnurl' => $optionaldisguise ? $PAGE->url->out() : $referer,
             'nexturl' => $PAGE->url->out(),
             'contextid' => $contextid,
+            'optional' => $optionaldisguise,
         ]);
         redirect($url);
     }

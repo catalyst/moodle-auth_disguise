@@ -55,7 +55,8 @@ $string['privacy:metadata:database:auth_disguise_unmapped_disg'] = 'Un-allocated
 $string['privacy:metadata:database:auth_disguise_unmapped_disg:disguiseid'] = 'ID of disguise user';
 
 // Switch ID.
-$string['switch_to_disguise_id_warning'] = 'You are requesting access to a page where user disguises are enabled.';
+$string['switch_to_forced_disguise_id_warning'] = 'You are requesting access to a page where user disguises are forced. If you chose to continue with your current ID, you will be redirected to previous page. Otherwise, you can switch to a disguise ID to access the page.';
+$string['switch_to_optional_disguise_id_warning'] = 'You are requesting access to a page where user disguises are optional. You can choose to continue with your current ID, or switch to a disguise ID.';
 $string['switch_to_real_id_warning'] = 'You are requesting access to a page where user disguises are disabled.';
 $string['continue_with_current_id'] = 'Continue with current ID';
 $string['switch_to_disguise_id'] = 'Switch to disguise ID';

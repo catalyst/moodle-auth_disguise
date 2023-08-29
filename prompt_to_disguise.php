@@ -32,6 +32,7 @@ $returnurl = optional_param('returnurl', "", PARAM_LOCALURL);
 $nexturl = optional_param('nexturl', "", PARAM_LOCALURL);
 $contextid = optional_param('contextid', 0, PARAM_INT);
 $switchidentity = optional_param('switchidentity', 0, PARAM_INT);
+$optional = optional_param('optional', 0, PARAM_BOOL);
 
 // Set page url/
 $PAGE->set_url('/auth/disguise/prompt_to_disguise.php');
@@ -43,8 +44,9 @@ $PAGE->set_context($context);
 // Check if $USER is logged in.
 isloggedin() || redirect($CFG->wwwroot . '/login/index.php');
 
-// Not Switch identity, so just continue.
+// Not switching identity, so just continue.
 if ($switchidentity == AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID) {
+    disguise::ignore_disguise_for_context($contextid);
     redirect($returnurl);
 }
 
@@ -77,14 +79,18 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('title', 'auth_disguise'));
 
 // Alert Box.
-echo $OUTPUT->notification(get_string('switch_to_disguise_id_warning', 'auth_disguise'), 'warning');
+if ($optional) {
+    echo $OUTPUT->notification(get_string('switch_to_optional_disguise_id_warning', 'auth_disguise'), 'warning');
+} else {
+    echo $OUTPUT->notification(get_string('switch_to_forced_disguise_id_warning', 'auth_disguise'), 'warning');
+}
 
 // Continue button.
 echo $OUTPUT->single_button(
     new moodle_url('/auth/disguise/prompt_to_disguise.php', [
             'contextid' => $contextid,
             'switchidentity' => AUTH_DISGUISE_CONTINUE_WITH_CURRENT_ID,
-            'returnurl' => $returnurl
+            'returnurl' => $returnurl,
     ]),
     get_string('continue_with_current_id', 'auth_disguise'),
     'get'
@@ -95,7 +101,7 @@ echo $OUTPUT->single_button(
     new moodle_url('/auth/disguise/prompt_to_disguise.php', [
             'contextid' => $contextid,
             'switchidentity' => AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID,
-            'nexturl' => $nexturl
+            'nexturl' => $nexturl,
     ]),
     get_string('switch_to_disguise_id', 'auth_disguise'),
     'get'
