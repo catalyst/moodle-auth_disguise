@@ -26,7 +26,16 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class disguise_context {
-    public static function get_course_context($contextid) {
+
+    /**
+     * Get course context from given context id.
+     * If the provided context id is a course module context, it will find the parent course context.
+     * This is used to get disguise mode for at parent course level.
+     *
+     * @param int $contextid context id of either a course or a course module.
+     * @return \context_course
+     */
+    public static function get_course_context(int $contextid): \context_course {
         global $DB;
         $context = \context::instance_by_id($contextid);
 
@@ -41,29 +50,49 @@ class disguise_context {
         return $context;
     }
 
-    // Check if disguise mode exists for context.
-    public static function disguise_mode_exists($contextid) {
+    /**
+     * Check if disguise mode exists for a given context.
+     *
+     * @param $contextid
+     * @return bool
+     */
+    public static function disguise_context_mode_exists(int $contextid): bool {
         global $DB;
         return $DB->record_exists('auth_disguise_ctx_mode', ['contextid' => $contextid]);
     }
 
-    // Insert disguise mode.
-    public static function insert_disguise_context_mode($contextid, $mode) {
+    /**
+     * Insert disguise mode for a given context.
+     *
+     * @param int $contextid context id
+     * @param int $mode disguise mode
+     * @return bool
+     */
+    public static function insert_disguise_context_mode(int $contextid, int $mode): bool {
         global $DB;
+
         $record = new \stdClass();
         $record->contextid = $contextid;
         $record->disguises_mode = $mode;
 
-        return $DB->insert_record('auth_disguise_ctx_mode', $record);
+        return (bool) $DB->insert_record('auth_disguise_ctx_mode', $record);
     }
 
-    // Update disguise mode.
-    public static function update_disguise_context_mode($contextid, $mode) {
+    /**
+     * Update disguise mode for a given context.
+     *
+     * @param int $contextid context id
+     * @param int $mode disguise mode
+     * @return bool
+     */
+    public static function update_disguise_context_mode(int $contextid, int $mode): bool {
         global $DB;
-        // Update field disguises_mode.
         return $DB->set_field('auth_disguise_ctx_mode', 'disguises_mode', $mode,
             ['contextid' => $contextid]);
     }
+
+
+    // #################################### DISGUISE SET ####################################
 
     // Check if there is same naming set
     public static function get_naming_set_record($namingset) {

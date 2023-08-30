@@ -235,7 +235,7 @@ function auth_disguise_course_edit_post_actions($data, $oldcourse) {
 
     // Add or update disguise mode for course and context.
     $context = context_course::instance($data->id);
-    if (!disguise_context::disguise_mode_exists($context->id)) {
+    if (!disguise_context::disguise_context_mode_exists($context->id)) {
         // Add disguise mode for course.
         disguise_context::insert_disguise_context_mode($context->id, $data->disguises_mode);
     } else {
