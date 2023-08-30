@@ -56,7 +56,6 @@ if ($switchidentity == AUTH_DISGUISE_SWITCH_TO_DISGUISE_ID) {
     redirect($nexturl);
 }
 
-
 // Set up PAGE.
 $context = context::instance_by_id($contextid);
 $PAGE->set_context($context);

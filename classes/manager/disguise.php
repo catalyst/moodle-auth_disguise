@@ -198,35 +198,27 @@ class disguise {
 
         // Check if the disguise is applied everywhere in the course.
         $coursecontext = disguise_context::get_course_context($contextid);
-        $disguisemode = self::get_disguise_mode_for_context($coursecontext->id);
+        $coursedisguisemode = self::get_disguise_mode_for_context($coursecontext->id);
 
-        switch ($disguisemode) {
+        // Check if disguise is enforced at course level.
+        switch ($coursedisguisemode) {
             case AUTH_DISGUISE_MODE_COURSE_EVERYWHERE:
                 return true;
-            case AUTH_DISGUISE_MODE_DISABLED:
+            case AUTH_DISGUISE_MODE_COURSE_OPTIONAL:
+            case AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY:
+                // If the current context is course context.
+                // The disguise is enabled if the disguise mode is optional.
+                if ($contextid === $coursecontext->id) {
+                    return $coursedisguisemode === AUTH_DISGUISE_MODE_COURSE_OPTIONAL;
+                } else {
+                    $disguisemode = self::get_disguise_mode_for_context($contextid);
+                    return $disguisemode !== AUTH_DISGUISE_MODE_DISABLED;
+                }
+            default:
+                // AUTH_DISGUISE_MODE_DISABLED.
                 return false;
         }
-        // The disguise mode is set as optional or forced in activities only.
-        // If the current context is course context, then disguise is disabled.
-        if ($contextid === $coursecontext->id) {
-            return false;
-        }
 
-        // If the context is activity. We will check if it is optional or forced.
-
-        // Force disguise mode for activities.
-        if ($disguisemode === AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY) {
-            return true;
-        }
-
-        // Otherwise, it is optional.
-        //Check if disguise is enabled for this activity context.
-        $disguisemode = self::get_disguise_mode_for_context($contextid);
-        if ($disguisemode === AUTH_DISGUISE_MODE_DISABLED) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

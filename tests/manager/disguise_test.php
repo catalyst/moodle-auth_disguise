@@ -83,40 +83,40 @@ class disguise_test extends \advanced_testcase {
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_OPTIONAL,
                 'modmode' => AUTH_DISGUISE_MODE_DISABLED,
-                'enabledcoursecontext' => false,
+                'enabledcoursecontext' => true,
                 'enabledmodcontext' => false,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => true,
+                'optionalforcourseandmod' => true,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_OPTIONAL,
                 'modmode' => AUTH_DISGUISE_MODE_COURSE_MODULE_PEER_SAFE,
-                'enabledcoursecontext' => false,
+                'enabledcoursecontext' => true,
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => true,
+                'optionalforcourseandmod' => true,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_OPTIONAL,
                 'modmode' => AUTH_DISGUISE_MODE_COURSE_MODULE_INSTRUCTOR_SAFE,
-                'enabledcoursecontext' => false,
+                'enabledcoursecontext' => true,
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => true,
+                'optionalforcourseandmod' => true,
             ],
 
-            // Disguise on course activities.
+            // Course module only.
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
                 'modmode' => AUTH_DISGUISE_MODE_DISABLED,
                 'enabledcoursecontext' => false,
-                'enabledmodcontext' => true,
+                'enabledmodcontext' => false,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
@@ -125,7 +125,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_MODULES_ONLY,
@@ -134,7 +134,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => false,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
 
             // Disguise everywhere in the course.
@@ -145,7 +145,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => true,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_EVERYWHERE,
@@ -154,7 +154,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => true,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
             [
                 'coursemode' => AUTH_DISGUISE_MODE_COURSE_EVERYWHERE,
@@ -163,7 +163,7 @@ class disguise_test extends \advanced_testcase {
                 'enabledmodcontext' => true,
                 'allowedsubcontexts' => true,
                 'forcedsubcontexts' => true,
-                'optinalforcourseandmod' => false,
+                'optionalforcourseandmod' => false,
             ],
         ];
     }
@@ -183,7 +183,7 @@ class disguise_test extends \advanced_testcase {
     public function test_set_disguise_mode_for_context($coursemode, $modmode,
                                                        $enabledcoursecontext = false, $enabledmodcontext = false,
                                                        $allowedsubcontexts = false, $forcedsubcontexts = false,
-                                                       $optinalforcourseandmod = false) {
+                                                       $optionalforcourseandmod = false) {
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -217,8 +217,8 @@ class disguise_test extends \advanced_testcase {
         $this->assertEquals($forcedsubcontexts, disguise::is_disguise_forced_for_subcontext($coursecontext->id));
 
         // Check if disguise is optional for course and mod.
-        $this->assertEquals($optinalforcourseandmod, disguise::is_disguise_optional_for_context($coursecontext->id));
-        $this->assertEquals($optinalforcourseandmod, disguise::is_disguise_optional_for_context($modcontext->id));
+        $this->assertEquals($optionalforcourseandmod, disguise::is_disguise_optional_for_context($coursecontext->id));
+        $this->assertEquals($optionalforcourseandmod, disguise::is_disguise_optional_for_context($modcontext->id));
     }
 
     /**
