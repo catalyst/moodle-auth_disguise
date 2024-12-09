@@ -14,7 +14,7 @@ As core hooks are not available for course context configuration (without using 
 
 - 30/Jun/2023:
 
-Commit `ae60797474d3f0d8db6c89a7166561d922550d89` adds four core hooks similar to the coursemodule_ hooks from MDL-52534, but depends on integration into core. Without this, implementation must rely on custom course fields (config) with specific configuration to match SQL checks to extract data from core. The subsequent commit includes this note and functionality which depends upon it.
+Git patch diff `0001-MDL-76126-course-Add-four-callbacks-for-course-forms.patch` adds four core hooks similar to the coursemodule_ hooks from MDL-52534, but depends on integration into core. Without this, implementation must rely on custom course fields (config) with specific configuration to match SQL checks to extract data from core. The subsequent commit includes this note and functionality which depends upon it.
 
 ## (Proof-of-Concept) Manual Configuration / Testing / Demo
 
